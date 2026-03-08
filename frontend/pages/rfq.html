@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart RFQ Generator — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- RFQ Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📝 Smart RFQ Generator</div>
+                                <div class="card-subtitle">AI generates complete RFQ with SLA clauses, penalties,
+                                    payment terms</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:16px">
+                            <div class="form-grid form-grid-2">
+                                <div class="input-group">
+                                    <label class="input-label">Origin City</label>
+                                    <input type="text" id="rfq-origin" class="input-field" placeholder="Mumbai"
+                                        value="Mumbai" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Destination City</label>
+                                    <input type="text" id="rfq-destination" class="input-field" placeholder="Delhi"
+                                        value="Delhi" />
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Cargo Type</label>
+                                <select id="rfq-cargo" class="input-field">
+                                    <option>General Cargo</option>
+                                    <option>FMCG</option>
+                                    <option>Pharmaceutical / Cold Chain</option>
+                                    <option>Electronics</option>
+                                    <option>Automobile Parts</option>
+                                    <option>Textiles / Apparel</option>
+                                    <option>Hazardous Materials</option>
+                                </select>
+                            </div>
+                            <div class="form-grid form-grid-2">
+                                <div class="input-group">
+                                    <label class="input-label">Weight (kg)</label>
+                                    <input type="number" id="rfq-weight" class="input-field" placeholder="1000"
+                                        value="1000" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Volume (CBM)</label>
+                                    <input type="number" id="rfq-volume" class="input-field" placeholder="5"
+                                        value="5" />
+                                </div>
+                            </div>
+                            <div class="form-grid form-grid-2">
+                                <div class="input-group">
+                                    <label class="input-label">Pickup Date</label>
+                                    <input type="date" id="rfq-pickup" class="input-field" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Delivery Deadline</label>
+                                    <input type="date" id="rfq-deadline" class="input-field" />
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Special Requirements (optional)</label>
+                                <input type="text" id="rfq-special" class="input-field"
+                                    placeholder="Temperature controlled, GPS mandatory, etc." />
+                            </div>
+                            <button class="btn btn-primary" onclick="generateRFQ()"
+                                style="width:100%;justify-content:center">
+                                🤖 Generate RFQ with AI →
+                            </button>
+                        </div>
+
+                        <!-- History -->
+                        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+                            <div
+                                style="font-weight:600;font-size:0.875rem;margin-bottom:12px;color:var(--text-secondary)">
+                                RECENT RFQs</div>
+                            <div id="rfq-history" style="display:flex;flex-direction:column;gap:8px">
+                                <div style="font-size:0.8125rem;color:var(--text-muted)">No RFQs yet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">RFQ Preview</div>
+                                <div class="card-subtitle">AI-generated procurement document</div>
+                            </div>
+                            <div style="display:flex;gap:8px" id="rfq-actions" style="display:none">
+                                <button class="btn btn-secondary btn-sm" id="rfq-copy-btn"
+                                    onclick="copyText(document.getElementById('rfq-preview').textContent, this)">📋
+                                    Copy</button>
+                                <button class="btn btn-primary btn-sm" onclick="downloadRFQ()">⬇️ Download</button>
+                            </div>
+                        </div>
+                        <div id="rfq-preview-wrap">
+                            <div style="padding:48px;text-align:center;color:var(--text-muted)">
+                                <div style="font-size:3rem;margin-bottom:16px">📝</div>
+                                <div style="font-weight:600;margin-bottom:8px">RFQ will appear here</div>
+                                <div style="font-size:0.875rem">Fill in the form and click Generate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('rfq', 'Smart RFQ Generator');
+
+        // Set default dates
+        const today = new Date();
+        const pickup = new Date(today); pickup.setDate(today.getDate() + 7);
+        const deadline = new Date(today); deadline.setDate(today.getDate() + 10);
+        document.getElementById('rfq-pickup').value = pickup.toISOString().split('T')[0];
+        document.getElementById('rfq-deadline').value = deadline.toISOString().split('T')[0];
+
+        let currentRFQ = '';
+
+        async function generateRFQ() {
+            const origin = document.getElementById('rfq-origin').value.trim() || 'Mumbai';
+            const destination = document.getElementById('rfq-destination').value.trim() || 'Delhi';
+            const cargo_type = document.getElementById('rfq-cargo').value;
+            const weight_kg = parseFloat(document.getElementById('rfq-weight').value) || 1000;
+            const volume_cbm = parseFloat(document.getElementById('rfq-volume').value) || 5;
+            const pickup_date = document.getElementById('rfq-pickup').value;
+            const delivery_deadline = document.getElementById('rfq-deadline').value;
+            const special_requirements = document.getElementById('rfq-special').value;
+
+            showSpinner('🤖 AI generating complete RFQ document...');
+            try {
+                const result = await api.generateRFQ({ origin, destination, cargo_type, weight_kg, volume_cbm, pickup_date, delivery_deadline, special_requirements });
+                hideSpinner();
+                currentRFQ = result.rfq_text;
+                renderPreview(currentRFQ);
+                updateHistory(origin, destination, result.rfq_id);
+                toast('✅ RFQ generated! Download or copy it.', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderPreview(text) {
+            document.getElementById('rfq-preview-wrap').innerHTML = `<pre id="rfq-preview" class="doc-preview">${text}</pre>`;
+            const actions = document.getElementById('rfq-actions');
+            actions.style.display = 'flex';
+        }
+
+        function downloadRFQ() {
+            if (!currentRFQ) return;
+            downloadText(currentRFQ, 'CarrierIQ_RFQ_' + Date.now() + '.txt');
+            toast('RFQ downloaded!', 'success');
+        }
+
+        function updateHistory(origin, dest, id) {
+            const hist = document.getElementById('rfq-history');
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.8125rem';
+            div.innerHTML = `<span><strong>${origin} → ${dest}</strong> · ${new Date().toLocaleDateString('en-IN')}</span>
+    <span class="badge badge-success">Generated</span>`;
+            if (hist.children[0]?.textContent.includes('No RFQs')) hist.innerHTML = '';
+            hist.prepend(div);
+        }
+    </script>
+</body>
+
+</html>

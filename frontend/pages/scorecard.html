@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Performance Scorecard — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- Update Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📈 Update Carrier Score</div>
+                                <div class="card-subtitle">Input post-shipment data to recalculate carrier score</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:16px">
+                            <div class="input-group">
+                                <label class="input-label">Shipment ID</label>
+                                <input type="text" id="sc-shipment-id" class="input-field" placeholder="SHIP-2024-001"
+                                    value="SHIP-2024-001" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Carrier</label>
+                                <select id="sc-carrier-id" class="input-field">
+                                    <option value="">Select carrier...</option>
+                                </select>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                <div class="input-group">
+                                    <label class="input-label">Promised Delivery</label>
+                                    <input type="date" id="sc-promised" class="input-field" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Actual Delivery</label>
+                                    <input type="date" id="sc-actual" class="input-field" />
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Cargo Condition</label>
+                                <select id="sc-condition" class="input-field">
+                                    <option value="good">✅ Good — No damage</option>
+                                    <option value="partial">⚠️ Partial damage</option>
+                                    <option value="damaged">❌ Significant damage</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Billing Accuracy (%)</label>
+                                <input type="number" id="sc-billing" class="input-field" min="0" max="100" value="100"
+                                    placeholder="100" />
+                                <small style="color:var(--text-muted);font-size:0.75rem">100% = invoice matched exactly,
+                                    0% = major billing fraud</small>
+                            </div>
+                            <button class="btn btn-primary" onclick="updateScore()"
+                                style="width:100%;justify-content:center">
+                                🔄 Recalculate Carrier Score →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Score Update Result</div>
+                                <div class="card-subtitle">Before vs After score comparison</div>
+                            </div>
+                        </div>
+                        <div id="score-result-wrap">
+                            <div style="padding:48px;text-align:center;color:var(--text-muted)">
+                                <div style="font-size:3rem;margin-bottom:16px">📊</div>
+                                <div style="font-weight:600;margin-bottom:8px">Update result appears here</div>
+                                <div style="font-size:0.875rem">Submit a shipment evaluation to see the score change
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score History Chart -->
+                <div class="card" style="margin-top:24px">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Performance Trend</div>
+                            <div class="card-subtitle">Carrier score over time</div>
+                        </div>
+                    </div>
+                    <canvas id="score-trend-chart" height="120"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('scorecard', 'Performance Scorecard');
+
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('sc-promised').value = today;
+        document.getElementById('sc-actual').value = today;
+
+        async function loadCarriers() {
+            try {
+                const data = await api.getAllCarriers();
+                const sel = document.getElementById('sc-carrier-id');
+                (data.carriers || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.carrier_id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { }
+        }
+
+        async function updateScore() {
+            const shipment_id = document.getElementById('sc-shipment-id').value.trim();
+            const carrier_id = document.getElementById('sc-carrier-id').value;
+            const promised = document.getElementById('sc-promised').value;
+            const actual = document.getElementById('sc-actual').value;
+            const condition = document.getElementById('sc-condition').value;
+            const billing = parseFloat(document.getElementById('sc-billing').value) || 100;
+
+            if (!carrier_id) { toast('Please select a carrier', 'warning'); return; }
+
+            showSpinner('🔄 Recalculating carrier performance score...');
+            try {
+                const result = await api.updateScorecard({
+                    shipment_id, carrier_id,
+                    actual_delivery_date: actual,
+                    promised_delivery_date: promised,
+                    condition, billing_accuracy: billing,
+                });
+                hideSpinner();
+                renderScoreResult(result);
+                renderTrendChart(result);
+                toast('✅ Carrier score updated!', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderScoreResult(r) {
+            const change = r.score_change;
+            const color = change >= 0 ? 'var(--success)' : 'var(--danger)';
+            const icon = change >= 0 ? '📈' : '📉';
+            document.getElementById('score-result-wrap').innerHTML = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:3rem;margin-bottom:12px">${icon}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:32px;margin-bottom:20px">
+        <div>
+          <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">BEFORE</div>
+          <div style="font-size:2.5rem;font-weight:900;color:var(--text-secondary)">${r.old_score}</div>
+        </div>
+        <div style="font-size:2rem;color:${color}">→</div>
+        <div>
+          <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">AFTER</div>
+          <div style="font-size:2.5rem;font-weight:900;color:${color}">${r.new_score}</div>
+        </div>
+      </div>
+      <div style="display:inline-block;padding:8px 20px;background:${change >= 0 ? 'var(--success-bg)' : 'var(--danger-bg)'};border-radius:100px;font-weight:700;color:${color}">
+        ${change >= 0 ? '+' : ''}${change} points ${change >= 0 ? '↑' : '↓'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="text-align:center;background:var(--bg);padding:14px;border-radius:var(--radius-sm)">
+        <div style="font-size:1.25rem;font-weight:800">${r.breakdown?.on_time_component || 100}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">On-Time Score</div>
+      </div>
+      <div style="text-align:center;background:var(--bg);padding:14px;border-radius:var(--radius-sm)">
+        <div style="font-size:1.25rem;font-weight:800">${r.breakdown?.condition_component || 100}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Condition Score</div>
+      </div>
+      <div style="text-align:center;background:var(--bg);padding:14px;border-radius:var(--radius-sm)">
+        <div style="font-size:1.25rem;font-weight:800">${r.breakdown?.billing_component || 100}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Billing Score</div>
+      </div>
+    </div>`;
+        }
+
+        function renderTrendChart(result) {
+            const ctx = document.getElementById('score-trend-chart');
+            // Simulated historical + new data point
+            const mockHistory = [88, 90, 91, 89, 92, 93, result.old_score];
+            const newData = [...mockHistory, result.new_score];
+            const labels = ['6m ago', '5m ago', '4m ago', '3m ago', '2m ago', 'Last mo', 'Previous', 'Updated'];
+
+            if (window._trendChart) window._trendChart.destroy();
+            window._trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Carrier Score',
+                        data: newData,
+                        borderColor: '#2176AE', backgroundColor: 'rgba(33,118,174,0.08)',
+                        borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 4,
+                        pointBackgroundColor: newData.map((v, i) => i === newData.length - 1 ? (result.score_change >= 0 ? '#0DB57F' : '#EF4444') : '#2176AE'),
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { min: 70, max: 100, ticks: { callback: v => v } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        loadCarriers();
+    </script>
+</body>
+
+</html>

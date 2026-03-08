@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procurement Chat — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content"
+                style="padding-bottom:0;display:flex;flex-direction:column;height:calc(100vh - 80px)">
+
+                <!-- Suggested Queries -->
+                <div style="margin-bottom:16px">
+                    <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:10px">💡
+                        Try asking:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">Best carrier
+                            Mumbai to Delhi under ₹20,000</button>
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">Which carrier
+                            had fraudulent behavior last quarter</button>
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">Best carrier
+                            for pharmaceutical cargo Bangalore to Delhi</button>
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">Show carriers
+                            with fraud risk above medium</button>
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">What is market
+                            benchmark rate Mumbai to Kolkata</button>
+                        <button class="btn btn-secondary btn-sm" onclick="askSuggested(this.textContent)">Seasonal
+                            performance drops in November</button>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0">
+                    <div
+                        style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+                        <div
+                            style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.25rem">
+                            🧠</div>
+                        <div>
+                            <div style="font-weight:700;color:var(--text-primary)">CarrierIQ Procurement AI</div>
+                            <div style="font-size:0.8125rem;color:var(--success);font-weight:500">● Online · LangChain +
+                                FAISS RAG</div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="clearChat()" style="margin-left:auto">Clear
+                            Chat</button>
+                    </div>
+
+                    <!-- Messages -->
+                    <div id="chat-messages" class="chat-messages" style="flex:1">
+                        <div class="chat-bubble ai">
+                            <strong>👋 Hello! I'm CarrierIQ, your AI procurement co-pilot.</strong><br><br>
+                            I have access to carrier performance data for all major Indian carriers — BlueDart, Rivigo,
+                            Delhivery, DTDC, Gati, TCI Express, Safexpress, and XpressBees.<br><br>
+                            Ask me anything about carrier performance, rates, fraud risks, seasonal patterns, or lane
+                            intelligence. I'll give you ranked answers with full reasoning.
+                        </div>
+                    </div>
+
+                    <!-- Input -->
+                    <div
+                        style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;background:white">
+                        <input type="text" id="chat-input" class="chat-input"
+                            placeholder="Ask CarrierIQ anything about carriers, lanes, rates, risks..."
+                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}" />
+                        <button class="chat-send-btn" id="send-btn" onclick="sendMessage()">Send →</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('chat', 'Procurement AI Chat');
+
+        let isTyping = false;
+
+        function askSuggested(q) {
+            document.getElementById('chat-input').value = q;
+            sendMessage();
+        }
+
+        function addMessage(text, role, meta = '') {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${role}`;
+            if (role === 'ai') {
+                div.innerHTML = renderMarkdown(text);
+                if (meta) {
+                    div.innerHTML += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.08);font-size:0.75rem;color:var(--text-muted)">💡 ${meta}</div>`;
+                }
+            } else {
+                div.textContent = text;
+            }
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function showTyping() {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.id = 'typing-indicator';
+            div.className = 'chat-bubble ai';
+            div.innerHTML = '<span style="display:flex;gap:4px;align-items:center"><span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:pulse 1s infinite"></span><span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:pulse 1s 0.2s infinite"></span><span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:pulse 1s 0.4s infinite"></span> &nbsp;AI is thinking...</span>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function removeTyping() {
+            const t = document.getElementById('typing-indicator');
+            if (t) t.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const btn = document.getElementById('send-btn');
+            const query = input.value.trim();
+            if (!query || isTyping) return;
+
+            addMessage(query, 'user');
+            input.value = '';
+            isTyping = true;
+            btn.disabled = true;
+            btn.textContent = '...';
+            showTyping();
+
+            try {
+                const result = await api.chat(query);
+                removeTyping();
+                addMessage(result.answer || 'No response received', 'ai', result.reasoning || '');
+            } catch (e) {
+                removeTyping();
+                addMessage('⚠️ Error: ' + e.message + '\n\nPlease ensure the backend is running on port 8000.', 'ai');
+            }
+            isTyping = false;
+            btn.disabled = false;
+            btn.textContent = 'Send →';
+            input.focus();
+        }
+
+        function clearChat() {
+            document.getElementById('chat-messages').innerHTML = `
+    <div class="chat-bubble ai">
+      Chat cleared. How can I help with your procurement decisions today?
+    </div>`;
+        }
+    </script>
+</body>
+
+</html>

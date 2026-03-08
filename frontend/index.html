@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CarrierIQ — AI-Powered Procurement Co-Pilot for Logistics</title>
+  <meta name="description" content="CarrierIQ uses AI to automate carrier selection, scoring, RFQ generation and procurement decisions — 85% faster, 25% cheaper." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <a class="nav-brand" href="#">
+    <div class="nav-logo-mark">C<span style="font-size:0.7em">IQ</span></div>
+    <span class="nav-brand-name">CarrierIQ</span>
+    <span class="nav-brand-tag">AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#testimonials">Reviews</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <a href="pages/auth.html" class="btn btn-ghost btn-sm" id="signin-btn">Sign In</a>
+    <a href="pages/auth.html?mode=signup" class="btn btn-primary btn-sm" id="signup-btn">Get Started Free →</a>
+  </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      🏆 Advanced AI Procurement Carrier Agent
+    </div>
+    <h1 class="display-xl hero-title">
+      CarrierIQ —<br/>
+      <span>Intelligent Carrier Selection,</span><br/>
+      <span style="color:var(--navy)">Powered by AI</span>
+    </h1>
+    <p class="hero-subtitle">
+      From Excel chaos to AI-driven procurement decisions in 5 minutes.
+      Score every carrier, predict every risk, generate every document —
+      automatically.
+    </p>
+    <div class="hero-cta">
+      <a href="pages/auth.html?mode=signup" class="btn btn-primary btn-lg" id="hero-cta-btn">
+        🚀 Start Free Trial
+      </a>
+      <a href="#how-it-works" class="btn btn-secondary btn-lg">Watch How It Works →</a>
+    </div>
+    <div class="hero-social">
+      <div class="hero-avatars">
+        <div class="hero-avatar">R</div>
+        <div class="hero-avatar">P</div>
+        <div class="hero-avatar">A</div>
+        <div class="hero-avatar">S</div>
+      </div>
+      <span class="hero-social-text">Trusted by <strong>500+</strong> logistics professionals</span>
+    </div>
+  <div class="hero-widgets-left">
+    <div class="widget-pill">
+      <div class="widget-icon" style="background:#EBF5FF">🤖</div>
+      <div class="widget-text">
+        <div class="widget-title">LangChain Agent</div>
+        <div class="widget-sub">Active & Scoring Bids</div>
+      </div>
+    </div>
+    <div class="widget-pill">
+      <div class="widget-icon" style="background:#F0FFF4">🛡️</div>
+      <div class="widget-text">
+        <div class="widget-title">Risk Analysis</div>
+        <div class="widget-sub">0 Fraud Issues Found</div>
+      </div>
+    </div>
+    <div class="widget-pill">
+      <div class="widget-icon" style="background:#FFF0F5">📄</div>
+      <div class="widget-text">
+        <div class="widget-title">Smart Documents</div>
+        <div class="widget-sub">RFQ Generated in 1.2s</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-stats" id="hero-stats">
+    <div class="stat-pill">
+      <div class="stat-pill-num" id="stat1">0%</div>
+      <div class="stat-pill-label">Faster Procurement Decisions</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-num" id="stat2">0%</div>
+      <div class="stat-pill-label">Average Cost Reduction</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-num" id="stat3">0%</div>
+      <div class="stat-pill-label">AI Explainability Score</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Trusted By ──────────────────────────────────────────── -->
+<div style="background:white; padding:40px 60px; border-bottom:1px solid var(--border); text-align:center;">
+  <p style="font-size:0.8125rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:24px">Trusted by India's leading logistics teams</p>
+  <div style="display:flex;align-items:center;justify-content:center;gap:60px;flex-wrap:wrap;">
+    <span style="font-size:1.125rem;font-weight:800;color:var(--text-muted)">MAHINDRA LOGISTICS</span>
+    <span style="font-size:1.125rem;font-weight:800;color:var(--text-muted)">FLIPKART COMMERCE</span>
+    <span style="font-size:1.125rem;font-weight:800;color:var(--text-muted)">TATA FREIGHT</span>
+    <span style="font-size:1.125rem;font-weight:800;color:var(--text-muted)">RELIANCE RETAIL</span>
+    <span style="font-size:1.125rem;font-weight:800;color:var(--text-muted)">MYNTRA SHIPPING</span>
+  </div>
+</div>
+
+<!-- ── Features ───────────────────────────────────────────── -->
+<section class="section" id="features">
+  <div style="text-align:center;margin-bottom:20px">
+    <span class="section-eyebrow">12 Powerful Modules</span>
+    <h2 class="display-md" style="margin-top:12px">Everything your procurement team needs in one AI platform</h2>
+    <p style="color:var(--text-secondary);margin-top:16px;font-size:1rem;max-width:640px;margin-left:auto;margin-right:auto">
+      Replace spreadsheets, manual bid comparison, and gut-feel decisions with
+      data-driven, explainable AI recommendations.
+    </p>
+  </div>
+  <div class="features-grid" id="features-grid"></div>
+</section>
+
+<!-- ── How It Works ───────────────────────────────────────── -->
+<section class="how-section" id="how-it-works">
+  <div style="text-align:center">
+    <span class="section-eyebrow" style="background:rgba(33,118,174,0.2);color:#67C1FF">How It Works</span>
+    <h2 class="display-md text-gradient-white" style="margin-top:12px">From upload to decision in 4 steps</h2>
+    <p style="color:rgba(255,255,255,0.6);margin-top:16px;font-size:1rem;max-width:520px;margin-left:auto;margin-right:auto">
+      CarrierIQ's AI agent does in minutes what your team does in days
+    </p>
+  </div>
+  <div class="how-steps">
+    <div class="how-step animate-fadeInUp" style="animation-delay:0.1s">
+      <div class="step-num">📁</div>
+      <div class="step-title">1. Upload Carrier Bids</div>
+      <div class="step-desc">Drop any CSV or PDF — our AI normalizes every format, filling missing fields intelligently.</div>
+    </div>
+    <div class="how-step animate-fadeInUp" style="animation-delay:0.3s">
+      <div class="step-num">🧠</div>
+      <div class="step-title">2. AI Analyzes & Scores</div>
+      <div class="step-desc">LangChain agent evaluates each carrier on price, reliability, transit time, risk and fraud signals.</div>
+    </div>
+    <div class="how-step animate-fadeInUp" style="animation-delay:0.5s">
+      <div class="step-num">✅</div>
+      <div class="step-title">3. Decide with Confidence</div>
+      <div class="step-desc">Get a ranked recommendation with full reasoning — then generate RFQ or Award Letter in one click.</div>
+    </div>
+    <div class="how-step animate-fadeInUp" style="animation-delay:0.7s">
+      <div class="step-num">🚀</div>
+      <div class="step-title">4. Automate & Scale</div>
+      <div class="step-desc">Reconcile carrier bills, forecast future spot rates, and track ESG carbon emissions live on the dashboard.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ────────────────────────────────────────── -->
+<section class="testimonials-section" id="testimonials">
+  <div style="text-align:center">
+    <span class="section-eyebrow">Customer Voices</span>
+    <h2 class="display-md" style="margin-top:12px">Procurement teams love CarrierIQ</h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-quote">"CarrierIQ cut our carrier evaluation from 3 days to 2 hours. The fraud detection alone saved us ₹12 lakhs in Q4. Every logistics team needs this."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar">R</div>
+        <div><div class="author-name">Rajesh Mehta</div><div class="author-title">VP Procurement, Mahindra Logistics</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-quote">"The natural language chat is mind-blowing. I just ask 'best carrier Mumbai to Delhi under ₹20k' and get a ranked answer with reasons. My excel days are over."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar">P</div>
+        <div><div class="author-name">Priya Sharma</div><div class="author-title">Logistics Head, Myntra</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-quote">"Seasonal performance warnings saved us from a disaster in monsoon season. CarrierIQ predicted the reliability drop 30 days ahead and we switched carriers in time."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar">A</div>
+        <div><div class="author-name">Arjun Nair</div><div class="author-title">Supply Chain Director, Tata Freight</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ─────────────────────────────────────────────────── -->
+<section class="cta-section" id="pricing">
+  <div style="position:relative;z-index:1">
+    <span class="section-eyebrow" style="background:rgba(33,118,174,0.3);color:#67C1FF">Start Today for Free</span>
+    <h2 class="cta-title" style="margin-top:16px">Ready to transform your<br/>carrier procurement?</h2>
+    <p class="cta-sub">Join 500+ logistics teams making smarter decisions with CarrierIQ</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <a href="pages/auth.html?mode=signup" class="btn btn-primary btn-lg" style="background:white;color:var(--navy);box-shadow:0 8px 32px rgba(0,0,0,0.25)">
+        🚀 Start Free — No Credit Card
+      </a>
+      <a href="pages/dashboard.html" class="btn btn-secondary btn-lg" style="border-color:rgba(255,255,255,0.3);color:white;background:rgba(255,255,255,0.1)" id="demo-btn">
+        View Live Demo →
+      </a>
+    </div>
+    <p style="color:rgba(255,255,255,0.4);font-size:0.8125rem;margin-top:24px">No setup required. Works with Indian carrier data out of the box.</p>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────── -->
+<footer class="footer">
+  <div>
+    <div class="footer-brand">CarrierIQ</div>
+    <div class="footer-tagline">AI-Powered Procurement Co-Pilot</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+    <a href="#">API Docs</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-copy">© 2024 CarrierIQ. All rights reserved.</div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+// ── Navbar scroll effect ──────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ── Animated stats ────────────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      animateCounter(document.getElementById('stat1'), 85, '%');
+      animateCounter(document.getElementById('stat2'), 25, '%');
+      animateCounter(document.getElementById('stat3'), 100, '%');
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.5 });
+observer.observe(document.getElementById('hero-stats'));
+
+// ── Features data ─────────────────────────────────────────────
+const features = [
+  { icon: '📊', color: '#EEF6FF', title: 'Carrier Bid Scoring', desc: 'Upload bids in any format. AI normalizes and scores on Price, Reliability, Transit Time, and Risk with full explainability.' },
+  { icon: '🧬', color: '#F0FFF4', title: 'Carrier DNA Profiles', desc: 'Deep carrier analytics: mood index, fraud fingerprint, seasonal performance graphs, lane-specific track records.' },
+  { icon: '🌡️', color: '#FFF7ED', title: 'Risk & Intelligence', desc: 'Live risk heatmap, concentration alerts, seasonal drop predictions, and instant backup carrier recommendations.' },
+  { icon: '💬', color: '#F3F0FF', title: 'Natural Language Chat', desc: 'Ask anything in plain English. RAG-powered LangChain agent searches your carrier history and gives ranked answers.' },
+  { icon: '📝', color: '#FFF0F0', title: 'Smart RFQ Generator', desc: 'AI generates complete RFQ documents with SLA clauses, penalties, and payment terms — download as PDF instantly.' },
+  { icon: '🏆', color: '#FFFBEB', title: 'Award Letter Generator', desc: 'One click generates formal award letters. Carrier selected → letter drafted → sent. Procurement closed.' },
+  { icon: '📈', color: '#F0FFF8', title: 'Performance Scorecard', desc: 'Track carrier post-award performance. Billing accuracy, damage limits, actual vs committed routing.' },
+  { icon: '🛡️', color: '#F4F0FF', title: 'Carrier Onboarding', desc: 'Score new unknown carriers instantly using API data, fleet size, routing footprint, and basic financials.' },
+  { icon: '🧾', color: '#FFF9E6', title: 'Invoice Reconciliation AI', desc: 'Automated 3-way matching. Upload carrier invoices—AI finds overbilling, hidden accessorials, and matches them to contracted award rates.' },
+  { icon: '🌱', color: '#EAFDF4', title: 'Green Freight Tracking', desc: 'Predict and track Scope 3 CO2 emissions per lane and carrier. Optimize your supply chain for carbon footprint and sustainability.' },
+  { icon: '📊', color: '#F8EEFF', title: 'Market Benchmarking', desc: 'Know the market rate. Real-time benchmarks for all major Indian lanes based on actual contract data.' },
+  { icon: '📉', color: '#FFF0FB', title: 'Procurement ROI', desc: 'Monthly savings tracker, cost per kg trends, time saved, RFQs generated — exportable monthly reports.' },
+];
+
+const grid = document.getElementById('features-grid');
+features.forEach((f, i) => {
+  const div = document.createElement('div');
+  div.className = 'feature-card animate-fadeInUp';
+  div.style.animationDelay = `${i * 0.06}s`;
+  div.innerHTML = `
+    <div class="feature-icon" style="background:${f.color}">${f.icon}</div>
+    <div class="feature-title">${f.title}</div>
+    <div class="feature-desc">${f.desc}</div>
+  `;
+  grid.appendChild(div);
+});
+
+// ── Auth state ────────────────────────────────────────────────
+if (api.isLoggedIn()) {
+  document.getElementById('signin-btn').textContent = 'Dashboard →';
+  document.getElementById('signin-btn').href = 'pages/dashboard.html';
+  document.getElementById('signup-btn').textContent = `Hi, ${api.user.name.split(' ')[0]}`;
+  document.getElementById('signup-btn').href = 'pages/dashboard.html';
+  document.getElementById('hero-cta-btn').textContent = '→ Go to Dashboard';
+  document.getElementById('hero-cta-btn').href = 'pages/dashboard.html';
+  document.getElementById('demo-btn').textContent = '→ My Dashboard';
+  document.getElementById('demo-btn').href = 'pages/dashboard.html';
+} else {
+  document.getElementById('demo-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    // Auto-demo login
+    showSpinner('Loading demo...');
+    setTimeout(() => { hideSpinner(); window.location.href = 'pages/auth.html?demo=1'; }, 800);
+  });
+}
+</script>
+</body>
+</html>

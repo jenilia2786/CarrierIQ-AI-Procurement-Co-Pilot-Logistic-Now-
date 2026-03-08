@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+        body {
+            background: linear-gradient(160deg, #F0F6FF 0%, var(--bg) 60%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-wrap {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 600px;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 100%);
+            padding: 60px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(33, 118, 174, 0.35), transparent 70%);
+        }
+
+        .auth-left-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 64px;
+        }
+
+        .auth-logo-mark {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-light), #67C1FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.125rem;
+            color: white;
+        }
+
+        .auth-logo-name {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.375rem;
+            color: white;
+        }
+
+        .auth-tagline {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .auth-tagline span {
+            color: #67C1FF;
+        }
+
+        .auth-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        .auth-features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .auth-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .auth-feature-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .auth-right {
+            flex: 1;
+            background: white;
+            padding: 60px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .auth-sub {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .auth-sub a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .demo-btn-wrap {
+            display: flex;
+            gap: 12px;
+        }
+
+        .demo-card {
+            flex: 1;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .demo-card:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .demo-card-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 6px;
+        }
+
+        .demo-card-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.875rem;
+            background: var(--danger-bg);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            display: none;
+        }
+
+        .tabs {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-wrap">
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <div class="auth-logo">
+                    <div class="auth-logo-mark">C<span style="font-size:0.7em">IQ</span></div>
+                    <span class="auth-logo-name">CarrierIQ</span>
+                </div>
+                <div class="auth-tagline">AI-powered carrier procurement for <span>logistics teams</span></div>
+                <div class="auth-desc">Join hundreds of procurement teams making faster, smarter carrier decisions every
+                    day.</div>
+                <div class="auth-features">
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">🧠</div>LangChain AI agent scoring all your carrier bids
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">🔍</div>RAG-powered procurement intelligence search
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">📝</div>One-click RFQ and Award Letter generation
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">🛡️</div>Fraud detection and seasonal risk alerts
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">💰</div>Real-time market benchmark comparisons
+                    </div>
+                </div>
+            </div>
+            <div style="position:relative;z-index:1;font-size:0.8125rem;color:rgba(255,255,255,0.3)">
+                CarrierIQ · Intelligent Logistics
+            </div>
+        </div>
+
+        <div class="auth-right">
+            <!-- Tabs -->
+            <div class="tabs" id="auth-tabs">
+                <button class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+                <button class="tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+            </div>
+
+            <!-- Sign In Form -->
+            <div id="form-signin">
+                <div style="height:24px"></div>
+                <div class="auth-title">Welcome back 👋</div>
+                <div class="auth-sub">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign up free</a>
+                </div>
+                <div class="auth-form" id="signin-form">
+                    <div class="auth-divider">Quick Demo Login</div>
+                    <div class="demo-btn-wrap">
+                        <div class="demo-card" onclick="demoLogin()">
+                            <div style="font-size:1.5rem">🚚</div>
+                            <div class="demo-card-label">Demo Account</div>
+                            <div class="demo-card-sub">demo@carrieriq.ai</div>
+                        </div>
+                    </div>
+                    <div class="auth-divider">or use your account</div>
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="signin-email" class="input-field" placeholder="you@company.com"
+                            autocomplete="email" />
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="signin-password" class="input-field"
+                            placeholder="Enter your password" autocomplete="current-password" />
+                    </div>
+                    <div id="signin-error" class="error-msg">❌ Invalid email or password</div>
+                    <button class="btn btn-primary" id="signin-btn" onclick="doSignin()"
+                        style="width:100%;justify-content:center;padding:14px">
+                        Sign In →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="form-signup" style="display:none">
+                <div style="height:24px"></div>
+                <div class="auth-title">Create your account</div>
+                <div class="auth-sub">Already have one? <a href="#" onclick="switchTab('signin')">Sign in</a></div>
+                <div class="auth-form">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div class="input-group">
+                            <label class="input-label">Full Name</label>
+                            <input type="text" id="signup-name" class="input-field" placeholder="Rajesh Mehta" />
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Company Name</label>
+                            <input type="text" id="signup-company" class="input-field"
+                                placeholder="Mahindra Logistics" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Work Email</label>
+                        <input type="email" id="signup-email" class="input-field" placeholder="you@company.com"
+                            autocomplete="email" />
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="signup-password" class="input-field" placeholder="Min 8 characters"
+                            autocomplete="new-password" />
+                    </div>
+                    <div id="signup-error" class="error-msg">❌ Something went wrong. Please try again.</div>
+                    <button class="btn btn-primary" id="signup-btn" onclick="doSignup()"
+                        style="width:100%;justify-content:center;padding:14px">
+                        Create Account & Get Started →
+                    </button>
+                    <p style="font-size:0.75rem;color:var(--text-muted);text-align:center">
+                        By signing up, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // Check URL params for mode
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'signup') switchTab('signup');
+        if (params.get('demo') === '1') { setTimeout(() => demoLogin(), 300); }
+
+        // If already logged in, go to dashboard
+        if (api.isLoggedIn()) window.location.href = 'dashboard.html';
+
+        function switchTab(tab) {
+            document.getElementById('form-signin').style.display = tab === 'signin' ? '' : 'none';
+            document.getElementById('form-signup').style.display = tab === 'signup' ? '' : 'none';
+            document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+            document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+        }
+
+        async function doSignin() {
+            const email = document.getElementById('signin-email').value.trim();
+            const pwd = document.getElementById('signin-password').value;
+            const errEl = document.getElementById('signin-error');
+            const btn = document.getElementById('signin-btn');
+            if (!email || !pwd) { errEl.textContent = '❌ Please fill in all fields'; errEl.style.display = 'block'; return; }
+            errEl.style.display = 'none';
+            btn.textContent = 'Signing in...'; btn.disabled = true;
+            try {
+                await api.login(email, pwd);
+                toast('Welcome back!', 'success');
+                setTimeout(() => window.location.href = 'dashboard.html', 600);
+            } catch (e) {
+                errEl.textContent = '❌ ' + e.message;
+                errEl.style.display = 'block';
+                btn.textContent = 'Sign In →'; btn.disabled = false;
+            }
+        }
+
+        async function doSignup() {
+            const name = document.getElementById('signup-name').value.trim();
+            const company = document.getElementById('signup-company').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const pwd = document.getElementById('signup-password').value;
+            const errEl = document.getElementById('signup-error');
+            const btn = document.getElementById('signup-btn');
+            if (!name || !company || !email || !pwd) { errEl.textContent = '❌ Please fill in all fields'; errEl.style.display = 'block'; return; }
+            if (pwd.length < 6) { errEl.textContent = '❌ Password must be at least 6 characters'; errEl.style.display = 'block'; return; }
+            errEl.style.display = 'none';
+            btn.textContent = 'Creating account...'; btn.disabled = true;
+            try {
+                await api.signup(name, company, email, pwd);
+                toast('Account created! Welcome to CarrierIQ 🎉', 'success');
+                setTimeout(() => window.location.href = 'dashboard.html', 800);
+            } catch (e) {
+                if (e.message.includes('already')) {
+                    errEl.textContent = '❌ Email already registered. Please sign in.';
+                    switchTab('signin');
+                    document.getElementById('signin-email').value = email;
+                } else {
+                    errEl.textContent = '❌ ' + e.message;
+                }
+                errEl.style.display = 'block';
+                btn.textContent = 'Create Account & Get Started →'; btn.disabled = false;
+            }
+        }
+
+        async function demoLogin() {
+            // Create/login demo account
+            showSpinner('Setting up demo account...');
+            try {
+                await api.signup('Demo User', 'CarrierIQ Demo', 'demo@carrieriq.ai', 'demo1234');
+            } catch (e) {
+                // Already exists, try login
+                try { await api.login('demo@carrieriq.ai', 'demo1234'); } catch (e2) { }
+            }
+            hideSpinner();
+            toast('Welcome to CarrierIQ Demo! 🚀', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 600);
+        }
+
+        // Enter key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                const form = document.getElementById('form-signup').style.display === 'none' ? 'signin' : 'signup';
+                if (form === 'signin') doSignin(); else doSignup();
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Award Letter Generator — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">🏆 Award Letter Generator</div>
+                                <div class="card-subtitle">Generate formal carrier contracts with one click</div>
+                            </div>
+                        </div>
+
+                        <!-- Pre-fill from last bid evaluation -->
+                        <div id="prefill-banner"
+                            style="display:none;margin-bottom:20px;padding:14px;background:var(--success-bg);border-radius:var(--radius-md);font-size:0.875rem;color:var(--success)">
+                            ✅ Pre-filled from last bid evaluation. Verify and generate.
+                        </div>
+
+                        <div style="display:flex;flex-direction:column;gap:16px">
+                            <div class="input-group">
+                                <label class="input-label">Carrier Name</label>
+                                <input type="text" id="award-carrier" class="input-field"
+                                    placeholder="BlueDart Express" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Lane</label>
+                                <input type="text" id="award-lane" class="input-field" placeholder="Mumbai → Delhi" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Contracted Rate (₹ per shipment)</label>
+                                <input type="number" id="award-rate" class="input-field" placeholder="18500" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Effective Date</label>
+                                <input type="date" id="award-date" class="input-field" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">SLA Terms</label>
+                                <textarea id="award-sla" class="input-field" style="height:80px;resize:vertical"
+                                    placeholder="95% on-time delivery, GPS tracking mandatory, digital POD within 24hrs"></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="generateAward()"
+                                style="width:100%;justify-content:center">
+                                🏆 Generate Award Letter →
+                            </button>
+                            <button class="btn btn-secondary" onclick="fillFromLastBid()"
+                                style="width:100%;justify-content:center">
+                                📋 Pre-fill from Last Bid Evaluation
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Award Letter Preview</div>
+                                <div class="card-subtitle">Formal carrier contract document</div>
+                            </div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn btn-secondary btn-sm" id="copy-btn"
+                                    onclick="copyText(document.getElementById('award-preview').textContent, this)">📋
+                                    Copy</button>
+                                <button class="btn btn-primary btn-sm" onclick="downloadAward()">⬇️ Download</button>
+                            </div>
+                        </div>
+                        <div id="award-preview-wrap">
+                            <div style="padding:48px;text-align:center;color:var(--text-muted)">
+                                <div style="font-size:3rem;margin-bottom:16px">🏆</div>
+                                <div style="font-weight:600;margin-bottom:8px">Award Letter appears here</div>
+                                <div style="font-size:0.875rem">Fill the form and click Generate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('award', 'Award Letter Generator');
+
+        // Default date = today
+        document.getElementById('award-date').value = new Date().toISOString().split('T')[0];
+
+        let currentLetter = '';
+
+        function fillFromLastBid() {
+            const last = localStorage.getItem('lastAwardCarrier');
+            if (!last) { toast('No recent bid evaluation found. Run Bid Scoring first.', 'warning'); return; }
+            const c = JSON.parse(last);
+            document.getElementById('award-carrier').value = c.carrier_name || '';
+            document.getElementById('award-lane').value = c.lane || '';
+            document.getElementById('award-rate').value = c.price || '';
+            document.getElementById('award-sla').value = '95% on-time delivery required, GPS tracking mandatory for all shipments, digital POD within 24 hours, cargo insurance of 100% invoice value';
+            document.getElementById('prefill-banner').style.display = 'block';
+            toast('Pre-filled from bid evaluation!', 'success');
+        }
+
+        async function generateAward() {
+            const carrier_name = document.getElementById('award-carrier').value.trim();
+            const lane = document.getElementById('award-lane').value.trim();
+            const rate = parseFloat(document.getElementById('award-rate').value) || 0;
+            const sla_terms = document.getElementById('award-sla').value.trim() || '95% on-time delivery, GPS tracking, digital POD within 24 hours';
+            const effective_date = document.getElementById('award-date').value;
+
+            if (!carrier_name || !lane) { toast('Please fill carrier name and lane', 'warning'); return; }
+
+            showSpinner('✍️ Generating formal award letter...');
+            try {
+                const result = await api.generateAwardLetter({ carrier_name, lane, rate, sla_terms, effective_date });
+                hideSpinner();
+                currentLetter = result.letter_text;
+                document.getElementById('award-preview-wrap').innerHTML = `<pre id="award-preview" class="doc-preview">${currentLetter}</pre>`;
+                toast('✅ Award letter generated!', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function downloadAward() {
+            if (!currentLetter) return;
+            downloadText(currentLetter, 'CarrierIQ_AwardLetter_' + Date.now() + '.txt');
+            toast('Award letter downloaded!', 'success');
+        }
+
+        // Auto-fill if arrived from bid scoring
+        fillFromLastBid();
+    </script>
+</body>
+
+</html>

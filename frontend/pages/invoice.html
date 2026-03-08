@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice Reconciliation AI — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">🧾 AI Invoice Reconciliation (3-Way Match)</div>
+                            <div class="card-subtitle">Drop carrier invoices to instantly match against Award Letters and detect overbilling or hidden accessorials.</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="runScan()">🔍 Scan Invoices</button>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px">
+                        <div>
+                            <div id="drop-zone"
+                                style="border:2px dashed var(--border-strong);border-radius:var(--radius-lg);padding:40px;text-align:center;cursor:pointer;background:var(--bg)">
+                                <div style="font-size:2.5rem;margin-bottom:12px">🧾</div>
+                                <div style="font-weight:600;margin-bottom:6px">Drop PDF Invoices found</div>
+                                <div style="font-size:0.8125rem;color:var(--text-muted)">Supports multi-page PDFs</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card-title" style="margin-bottom:16px;font-size:1rem">Detected Discrepancies</div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Carrier</th>
+                                        <th>Invoice #</th>
+                                        <th>Contract Rate</th>
+                                        <th>Billed Amount</th>
+                                        <th>Variance (%)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="animation: fadeInUp 0.5s ease-out">
+                                        <td><strong>BlueDart Express</strong></td>
+                                        <td>INV-50921</td>
+                                        <td>₹18,500</td>
+                                        <td>₹21,000</td>
+                                        <td style="color:var(--danger);font-weight:600">+13.5%</td>
+                                        <td><span class="badge badge-danger">High Risk</span></td>
+                                    </tr>
+                                    <tr style="animation: fadeInUp 0.5s ease-out 0.1s; animation-fill-mode: both;">
+                                        <td><strong>Delhivery</strong></td>
+                                        <td>DEL-992-B</td>
+                                        <td>₹16,800</td>
+                                        <td>₹16,800</td>
+                                        <td style="color:var(--success);font-weight:600">0.0%</td>
+                                        <td><span class="badge badge-success">Matched</span></td>
+                                    </tr>
+                                    <tr style="animation: fadeInUp 0.5s ease-out 0.2s; animation-fill-mode: both;">
+                                        <td><strong>Rivigo</strong></td>
+                                        <td>RIV-2026-X</td>
+                                        <td>₹22,000</td>
+                                        <td>₹23,100</td>
+                                        <td style="color:var(--warning);font-weight:600">+5.0%</td>
+                                        <td><span class="badge badge-warning">Review Fuel</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="audit-details" style="display:none">
+                    <div class="card-title" style="margin-bottom:12px;color:var(--danger)">🚨 AI Audit Finding: BlueDart INV-50921</div>
+                    <div style="background:#FFF0F0;padding:16px;border-radius:var(--radius-md);border:1px solid #FFD6D6;font-size:0.875rem;line-height:1.6">
+                        <strong>Reasoning:</strong> The contracted Award Letter (AWARD-20231015-BLUE) explicitly dictates a fixed rate of ₹18,500. The carrier has added a "Peak Season Levy" of ₹1,500 and an unapproved "Detention Charge" of ₹1,000. 
+                        <br><br><strong>AI Recommendation:</strong> Short-pay ₹18,500 and trigger dispute flag for remaining ₹2,500.
+                    </div>
+                    <div style="margin-top:16px">
+                        <button class="btn btn-secondary btn-sm" onclick="this.textContent = 'Dispute Email Drafted ✅'">Draft Dispute Email</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('invoice', 'Invoice Reconciliation AI');
+        function runScan() {
+            showSpinner("AI Optical Character Recognition running...");
+            setTimeout(() => {
+                hideSpinner();
+                document.getElementById('audit-details').style.display = 'block';
+                toast("Scanned 3 invoices. Found 2 discrepancies.", "success");
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

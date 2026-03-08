@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Risk & Intelligence — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <!-- Risk Overview Grid -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+
+                    <!-- Risk Heatmap -->
+                    <div class="card" style="grid-column:1/-1">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">🌡️ Lane Risk Heatmap</div>
+                                <div class="card-subtitle">Risk levels across all active corridors</div>
+                            </div>
+                        </div>
+                        <div id="heatmap"
+                            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+                        </div>
+                    </div>
+
+                    <!-- Concentration Alert -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">⚠️ Carrier Concentration Alerts</div>
+                                <div class="card-subtitle">Lanes where single carrier carries 70%+ volume</div>
+                            </div>
+                        </div>
+                        <div id="concentration-alerts" style="display:flex;flex-direction:column;gap:12px"></div>
+                    </div>
+
+                    <!-- Seasonal Predictor -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📅 Seasonal Performance Predictor</div>
+                                <div class="card-subtitle">Expected reliability changes by month</div>
+                            </div>
+                        </div>
+                        <canvas id="seasonal-predictor-chart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- What-If Backup Recommender -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">🔄 What-If Backup Recommender</div>
+                            <div class="card-subtitle">Input any carrier to instantly get backup recommendations</div>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:end;margin-bottom:20px">
+                        <div class="input-group">
+                            <label class="input-label">Select Primary Carrier</label>
+                            <select id="backup-carrier-select" class="input-field">
+                                <option value="">Choose carrier...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="getBackupRecommendation()">🔍 Find Backup Carriers
+                                →</button>
+                        </div>
+                    </div>
+                    <div id="backup-results" style="display:none"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('risk', 'Risk & Intelligence');
+
+        const LANE_RISKS = [
+            { lane: 'Mumbai → Delhi', risk: 'LOW', reason: 'Established highway, high patrolling, premium carriers dominant', carriers: 5 },
+            { lane: 'Delhi → Kolkata', risk: 'MEDIUM', reason: 'Long distance, occasional traffic/weather delays', carriers: 4 },
+            { lane: 'Mumbai → Kolkata', risk: 'HIGH', reason: 'Multiple cargo theft incidents reported Q4 2023', carriers: 3 },
+            { lane: 'Bangalore → Chennai', risk: 'LOW', reason: 'Short route, excellent NH infrastructure', carriers: 6 },
+            { lane: 'Hyderabad → Vizag', risk: 'MEDIUM', reason: 'Monsoon flooding risk June-August corridor', carriers: 3 },
+            { lane: 'Delhi → Jaipur', risk: 'LOW', reason: 'Very short route, all carriers perform well', carriers: 5 },
+            { lane: 'Chennai → Coimbatore', risk: 'MEDIUM', reason: 'Overbilling incidents reported, fraud risk on lane', carriers: 4 },
+            { lane: 'Mumbai → Pune', risk: 'LOW', reason: 'Expressway, fastest and safest lane in West India', carriers: 7 },
+            { lane: 'Kolkata → Patna', risk: 'HIGH', reason: 'Carrier concentration alert + poor road infrastructure', carriers: 2 },
+        ];
+
+        const CONCENTRATIONS = [
+            { lane: 'Delhi → Kolkata', carrier: 'TCI Express', pct: 78, risk: 'HIGH' },
+            { lane: 'Kolkata → Patna', carrier: 'Gati-KWE', pct: 82, risk: 'HIGH' },
+            { lane: 'Hyderabad → Vizag', carrier: 'Delhivery', pct: 71, risk: 'MEDIUM' },
+        ];
+
+        function renderHeatmap() {
+            const hm = document.getElementById('heatmap');
+            hm.innerHTML = LANE_RISKS.map(l => {
+                const color = l.risk === 'LOW' ? 'var(--success-bg)' : l.risk === 'MEDIUM' ? 'var(--warning-bg)' : 'var(--danger-bg)';
+                const textColor = l.risk === 'LOW' ? 'var(--success)' : l.risk === 'MEDIUM' ? 'var(--warning)' : 'var(--danger)';
+                const icon = l.risk === 'LOW' ? '✅' : l.risk === 'MEDIUM' ? '⚠️' : '🚨';
+                return `<div style="background:${color};border-radius:var(--radius-md);padding:16px;border:1px solid ${textColor}22">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-weight:700;font-size:0.875rem;color:var(--text-primary)">${l.lane}</div>
+        <span style="font-size:0.75rem;font-weight:700;color:${textColor}">${icon} ${l.risk}</span>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5">${l.reason}</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">${l.carriers} carriers active</div>
+    </div>`;
+            }).join('');
+        }
+
+        function renderConcentrations() {
+            const el = document.getElementById('concentration-alerts');
+            el.innerHTML = CONCENTRATIONS.map(c => `
+    <div style="padding:16px;background:${c.risk === 'HIGH' ? 'var(--danger-bg)' : 'var(--warning-bg)'};border-radius:var(--radius-md);border-left:4px solid ${c.risk === 'HIGH' ? 'var(--danger)' : 'var(--warning)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-weight:700;font-size:0.875rem">${c.lane}</div>
+        <span class="risk-badge-${c.risk.toLowerCase()}">${c.risk}</span>
+      </div>
+      <div style="font-size:0.875rem;color:var(--text-secondary)">
+        <strong>${c.carrier}</strong> handles <strong style="color:${c.risk === 'HIGH' ? 'var(--danger)' : 'var(--warning)'}">${c.pct}%</strong> of volume on this lane
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">
+        ⚠️ Recommendation: Diversify volume. Add 1-2 backup carriers immediately.
+      </div>
+    </div>`).join('');
+        }
+
+        function renderSeasonalPredictor() {
+            const ctx = document.getElementById('seasonal-predictor-chart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        { label: 'BlueDart', data: [97, 97, 96, 96, 95, 94, 93, 93, 95, 94, 89, 91], borderColor: '#2176AE', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+                        { label: 'Rivigo', data: [99, 98, 98, 97, 97, 96, 96, 95, 97, 97, 96, 96], borderColor: '#0DB57F', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+                        { label: 'DTDC', data: [91, 91, 90, 89, 88, 86, 84, 83, 87, 86, 82, 85], borderColor: '#EF4444', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+                    scales: { y: { min: 78, max: 100, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        async function loadCarriersForSelect() {
+            try {
+                const data = await api.getAllCarriers();
+                const sel = document.getElementById('backup-carrier-select');
+                (data.carriers || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.carrier_id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+                // Pre-select if coming from carrier DNA page
+                const pre = sessionStorage.getItem('backupCarrierId');
+                if (pre) { sel.value = pre; sessionStorage.removeItem('backupCarrierId'); getBackupRecommendation(); }
+            } catch (e) { }
+        }
+
+        async function getBackupRecommendation() {
+            const carrierId = document.getElementById('backup-carrier-select').value;
+            if (!carrierId) { toast('Please select a carrier first', 'warning'); return; }
+            showSpinner('🔍 Finding best backup carriers...');
+            try {
+                const data = await api.getBackupCarrier(carrierId);
+                hideSpinner();
+                const results = document.getElementById('backup-results');
+                results.style.display = 'block';
+                const backups = data.backup_recommendations || [];
+                results.innerHTML = `
+      <div style="padding:16px;background:var(--bg);border-radius:var(--radius-md);margin-bottom:16px;font-size:0.875rem;color:var(--text-secondary)">
+        <strong>Primary Carrier:</strong> ${data.primary_carrier} &nbsp;|&nbsp; <strong>Lane:</strong> ${data.lane}
+        <br><div style="margin-top:8px;color:var(--text-primary)">${data.reasoning}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        ${backups.slice(0, 3).map((c, i) => `
+        <div class="card" style="border:${i === 0 ? '2px solid var(--success)' : '1px solid var(--border)'}">
+          ${i === 0 ? '<div class="badge badge-success" style="margin-bottom:12px">🥇 Best Backup</div>' : ''}
+          <div style="font-weight:700;font-size:1rem;margin-bottom:12px">${c.name}</div>
+          <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:8px">On-Time: <strong>${c.on_time_rate}%</strong></div>
+          <div style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:8px">Avg Price: <strong>${formatINR(c.avg_price)}</strong></div>
+          <div style="font-size:0.8125rem;color:var(--text-secondary)">Trust Score: <strong>${c.trust_score || 90}/100</strong></div>
+        </div>`).join('')}
+      </div>`;
+                toast('✅ Backup recommendations ready', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        renderHeatmap();
+        renderConcentrations();
+        renderSeasonalPredictor();
+        loadCarriersForSelect();
+    </script>
+</body>
+
+</html>

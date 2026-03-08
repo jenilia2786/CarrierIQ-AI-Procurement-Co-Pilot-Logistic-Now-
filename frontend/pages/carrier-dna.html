@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrier DNA Profiles — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <!-- Carrier Grid -->
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Carrier DNA Profiles</div>
+                        <div class="section-subtitle">Deep analytics — mood index, fraud fingerprint, seasonal
+                            performance</div>
+                    </div>
+                    <div class="search-wrap">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="carrier-search" class="input-field" placeholder="Search carriers..."
+                            style="width:240px" oninput="filterCarriers()">
+                    </div>
+                </div>
+
+                <div id="carrier-grid"
+                    style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:24px">
+                    <div style="text-align:center;padding:48px;color:var(--text-muted);grid-column:1/-1">Loading carrier
+                        profiles...</div>
+                </div>
+
+                <!-- Detail Modal -->
+                <div id="carrier-modal"
+                    style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:40px 20px">
+                    <div
+                        style="max-width:900px;margin:0 auto;background:white;border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-xl)">
+                        <div
+                            style="background:linear-gradient(135deg,var(--navy-dark),var(--navy));padding:32px 36px;display:flex;justify-content:space-between;align-items:flex-start">
+                            <div>
+                                <div
+                                    style="font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">
+                                    CARRIER DNA PROFILE</div>
+                                <div id="modal-carrier-name"
+                                    style="font-size:1.75rem;font-weight:800;color:white;margin-bottom:8px">—</div>
+                                <div id="modal-carrier-lanes" style="font-size:0.875rem;color:rgba(255,255,255,0.6)">—
+                                </div>
+                            </div>
+                            <button onclick="closeModal()"
+                                style="background:rgba(255,255,255,0.1);border:none;color:white;font-size:1.25rem;cursor:pointer;border-radius:8px;padding:8px 14px">✕</button>
+                        </div>
+                        <!-- KPIs -->
+                        <div id="modal-kpis"
+                            style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)">
+                        </div>
+                        <!-- Body -->
+                        <div style="padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);margin-bottom:16px">📅 Seasonal
+                                    Performance (12 months)</div>
+                                <canvas id="seasonal-chart" height="160"></canvas>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);margin-bottom:16px">💰 Price Trend
+                                </div>
+                                <canvas id="price-trend-chart" height="160"></canvas>
+                            </div>
+                            <div id="modal-risk-section" style="grid-column:1/-1"></div>
+                        </div>
+                        <div style="padding:0 32px 32px;display:flex;gap:12px">
+                            <button class="btn btn-primary" onclick="goToBackup()">🔄 Find Backup Carrier</button>
+                            <button class="btn btn-secondary" onclick="window.location.href='award.html'">🏆 Generate
+                                Award Letter</button>
+                            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('carrier-dna', 'Carrier DNA Profiles');
+
+        let allCarriers = [];
+        let selectedCarrier = null;
+        let seasonalChart = null, priceTrendChart = null;
+
+        async function loadCarriers() {
+            try {
+                const data = await api.getAllCarriers();
+                allCarriers = data.carriers || [];
+                renderCarrierGrid(allCarriers);
+            } catch (e) {
+                toast('Error loading carriers: ' + e.message, 'error');
+            }
+        }
+
+        function getMoodLabel(score) {
+            if (score >= 90) return '😊 Excellent';
+            if (score >= 75) return '🙂 Good';
+            if (score >= 60) return '😐 Neutral';
+            return '😟 Strained';
+        }
+
+        function getFraudLabel(score) {
+            if (score <= 10) return { label: 'Very Low', cls: 'success' };
+            if (score <= 20) return { label: 'Low', cls: 'success' };
+            if (score <= 35) return { label: 'Medium', cls: 'warning' };
+            return { label: 'High', cls: 'danger' };
+        }
+
+        function renderCarrierGrid(carriers) {
+            const grid = document.getElementById('carrier-grid');
+            if (!carriers.length) { grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);grid-column:1/-1">No carriers found</div>'; return; }
+
+            grid.innerHTML = carriers.map(c => {
+                const fraud = getFraudLabel(c.fraud_score || 5);
+                return `
+    <div class="card" style="cursor:pointer" onclick="openCarrierModal('${c.carrier_id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div>
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.25rem;color:white;margin-bottom:12px">${c.name.charAt(0)}</div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text-primary)">${c.name}</div>
+          <div style="font-size:0.8125rem;color:var(--text-secondary);margin-top:2px">${(c.lanes || []).slice(0, 2).join(', ')}</div>
+        </div>
+        <span class="badge badge-${c.on_time_rate >= 95 ? 'success' : c.on_time_rate >= 88 ? 'warning' : 'danger'}">${c.on_time_rate}% On-Time</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="padding:12px;background:var(--bg);border-radius:var(--radius-sm)">
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500">Avg Price</div>
+          <div style="font-weight:700;color:var(--text-primary)">${formatINR(c.avg_price)}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:var(--radius-sm)">
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500">Carrier Mood</div>
+          <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem">${getMoodLabel(c.mood_index)}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="badge badge-navy">Trust: ${c.trust_score || 90}/100</span>
+        <span class="badge badge-${fraud.cls}">Fraud: ${fraud.label}</span>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openCarrierModal('${c.carrier_id}')">View Profile →</button>
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        function filterCarriers() {
+            const q = document.getElementById('carrier-search').value.toLowerCase();
+            const filtered = q ? allCarriers.filter(c => c.name.toLowerCase().includes(q) || (c.lanes || []).join(' ').toLowerCase().includes(q)) : allCarriers;
+            renderCarrierGrid(filtered);
+        }
+
+        async function openCarrierModal(carrierId) {
+            selectedCarrier = allCarriers.find(c => c.carrier_id === carrierId);
+            if (!selectedCarrier) return;
+            const c = selectedCarrier;
+            const fraud = getFraudLabel(c.fraud_score || 5);
+
+            document.getElementById('modal-carrier-name').textContent = c.name;
+            document.getElementById('modal-carrier-lanes').textContent = (c.lanes || []).join(' • ');
+
+            // KPIs
+            document.getElementById('modal-kpis').innerHTML = [
+                { icon: '🚀', label: 'On-Time Rate', value: c.on_time_rate + '%', color: 'var(--success)' },
+                { icon: '🛡️', label: 'Trust Score', value: (c.trust_score || 90) + '/100', color: 'var(--accent)' },
+                { icon: '💬', label: 'Carrier Mood', value: getMoodLabel(c.mood_index || 85), color: 'var(--text-primary)' },
+                { icon: '⚠️', label: 'Fraud Risk', value: fraud.label, color: fraud.cls === 'success' ? 'var(--success)' : fraud.cls === 'warning' ? 'var(--warning)' : 'var(--danger)' },
+            ].map(k => `<div style="padding:24px;border-right:1px solid var(--border);text-align:center">
+    <div style="font-size:1.5rem;margin-bottom:8px">${k.icon}</div>
+    <div style="font-size:1.25rem;font-weight:800;color:${k.color}">${k.value}</div>
+    <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500;margin-top:4px">${k.label}</div>
+  </div>`).join('');
+
+            // Risk section
+            document.getElementById('modal-risk-section').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;background:var(--bg);padding:20px;border-radius:var(--radius-md)">
+      <div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Best Lanes</div>
+        ${(c.best_lanes || []).map(l => `<div class="badge badge-success" style="margin:3px;display:inline-block">${l}</div>`).join('') || '<span style="color:var(--text-muted);font-size:0.875rem">None recorded</span>'}
+      </div>
+      <div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Worst Lanes</div>
+        ${(c.worst_lanes || []).map(l => `<div class="badge badge-danger" style="margin:3px;display:inline-block">${l}</div>`).join('') || '<span style="color:var(--success);font-size:0.875rem">✅ None flagged</span>'}
+      </div>
+      <div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Damage Rate / Dispute Response</div>
+        <div style="font-size:0.875rem;margin-bottom:4px">Damage: <strong>${c.damage_rate || 0.5}%</strong></div>
+        <div style="font-size:0.875rem">Dispute Response: <strong>${c.dispute_response_hrs || 48}h avg</strong></div>
+      </div>
+    </div>`;
+
+            document.getElementById('carrier-modal').style.display = 'block';
+
+            // Charts
+            setTimeout(() => {
+                if (seasonalChart) seasonalChart.destroy();
+                const seasonal = c.seasonal_data || [];
+                seasonalChart = new Chart(document.getElementById('seasonal-chart'), {
+                    type: 'line',
+                    data: {
+                        labels: seasonal.map(s => s.month),
+                        datasets: [{
+                            data: seasonal.map(s => s.reliability),
+                            borderColor: '#2176AE', backgroundColor: 'rgba(33,118,174,0.08)',
+                            borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3,
+                        }]
+                    },
+                    options: { plugins: { legend: { display: false } }, scales: { y: { min: 80, max: 100, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } } }
+                });
+
+                if (priceTrendChart) priceTrendChart.destroy();
+                const prices = c.price_trend || [];
+                const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+                priceTrendChart = new Chart(document.getElementById('price-trend-chart'), {
+                    type: 'line',
+                    data: {
+                        labels: months.slice(0, prices.length),
+                        datasets: [{
+                            data: prices,
+                            borderColor: '#0DB57F', backgroundColor: 'rgba(13,181,127,0.08)',
+                            borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3,
+                        }]
+                    },
+                    options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' } }, x: { grid: { display: false } } } }
+                });
+            }, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('carrier-modal').style.display = 'none';
+        }
+
+        function goToBackup() {
+            if (selectedCarrier) {
+                sessionStorage.setItem('backupCarrierId', selectedCarrier.carrier_id);
+                window.location.href = 'risk.html';
+            }
+        }
+
+        loadCarriers();
+    </script>
+</body>
+
+</html>

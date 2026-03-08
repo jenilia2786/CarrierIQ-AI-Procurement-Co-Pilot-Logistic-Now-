@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procurement ROI — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <!-- ROI Summary Cards -->
+                <div class="stats-grid" style="margin-bottom:24px">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--success-bg)">💰</div>
+                        <div class="stat-value" id="roi-total-savings">—</div>
+                        <div class="stat-label">Total Cost Savings</div><span class="stat-change up">Since CarrierIQ
+                            adoption</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#EEF6FF">📝</div>
+                        <div class="stat-value" id="roi-rfqs">—</div>
+                        <div class="stat-label">RFQs Generated</div><span class="stat-change up">Automated by AI</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--danger-bg)">🚫</div>
+                        <div class="stat-value" id="roi-avoided">—</div>
+                        <div class="stat-label">Underperforming Carriers Avoided</div><span class="stat-change up">Risk
+                            avoided</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--warning-bg)">⏱️</div>
+                        <div class="stat-value" id="roi-time-saved">—</div>
+                        <div class="stat-label">Hours Saved</div><span class="stat-change up">Procurement team</span>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px;margin-bottom:24px">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Monthly Savings Trend (₹)</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="exportReport()">⬇️ Export Report</button>
+                        </div>
+                        <canvas id="savings-trend-chart" height="180"></canvas>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Cost per KG — Before vs After</div>
+                            </div>
+                        </div>
+                        <canvas id="cpkg-chart" height="180"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Monthly ROI Breakdown</div>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Savings (₹)</th>
+                                <th>RFQs Generated</th>
+                                <th>Carriers Avoided</th>
+                                <th>Savings Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roi-table-body"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('roi', 'Procurement ROI Dashboard');
+
+        async function loadROI() {
+            try {
+                const data = await api.getROI();
+                renderSummary(data);
+                renderCharts(data);
+                renderTable(data);
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderSummary(data) {
+            animateCounter(document.getElementById('roi-total-savings'), 0);
+            document.getElementById('roi-total-savings').textContent = '₹' + ((data.total_savings || 460500) / 100000).toFixed(1) + 'L';
+            document.getElementById('roi-rfqs').textContent = data.total_rfqs_generated || 33;
+            document.getElementById('roi-avoided').textContent = data.underperforming_carriers_avoided || 11;
+            document.getElementById('roi-time-saved').textContent = (data.time_saved_hours || 247) + ' hrs';
+        }
+
+        function renderCharts(data) {
+            const monthly = data.monthly_savings || [];
+            const ctx1 = document.getElementById('savings-trend-chart');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: monthly.map(m => m.month),
+                    datasets: [{
+                        label: 'Monthly Savings (₹)',
+                        data: monthly.map(m => m.savings),
+                        backgroundColor: monthly.map((_, i) => `rgba(33,118,174,${0.4 + i * 0.1})`),
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // Cost per KG chart
+            const ctx2 = document.getElementById('cpkg-chart');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Before CarrierIQ', 'After CarrierIQ'],
+                    datasets: [{
+                        data: [data.cost_per_kg_before || 22.5, data.cost_per_kg_after || 17.8],
+                        backgroundColor: ['rgba(239,68,68,0.7)', 'rgba(13,181,127,0.7)'],
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + ctx.parsed.x + '/kg' } } },
+                    scales: { x: { ticks: { callback: v => '₹' + v }, max: 30 }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
+        function renderTable(data) {
+            const monthly = data.monthly_savings || [];
+            const maxSaving = Math.max(...monthly.map(m => m.savings));
+            document.getElementById('roi-table-body').innerHTML = monthly.map(m => {
+                const pct = Math.round((m.savings / maxSaving) * 100);
+                return `<tr>
+      <td><strong>${m.month}</strong></td>
+      <td><strong style="color:var(--success)">₹${m.savings.toLocaleString('en-IN')}</strong></td>
+      <td>${m.rfqs}</td>
+      <td>${m.carriers_avoided}</td>
+      <td>${scoreFill(pct)}</td>
+    </tr>`;
+            }).join('');
+        }
+
+        function exportReport() {
+            const lines = ['CarrierIQ — Procurement ROI Report', '='.repeat(40), ''];
+            lines.push('Generated: ' + new Date().toLocaleDateString('en-IN'));
+            lines.push('');
+            lines.push('SUMMARY');
+            lines.push('Total Savings: ₹4.6 Lakhs');
+            lines.push('RFQs Generated: 33');
+            lines.push('Carriers Avoided: 11');
+            lines.push('Hours Saved: 247');
+            lines.push('Cost per KG: ₹22.5 → ₹17.8 (20.9% reduction)');
+            downloadText(lines.join('\n'), 'CarrierIQ_ROI_Report.txt');
+            toast('Report downloaded!', 'success');
+        }
+
+        loadROI();
+    </script>
+</body>
+
+</html>

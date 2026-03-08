@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <!-- Sidebar injected by JS -->
+        <div class="main-content">
+            <!-- Topbar injected by JS -->
+            <div class="page-content" id="page-content">
+
+                <!-- Stats Grid -->
+                <div class="stats-grid" id="stats-grid" style="margin-bottom:28px">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#EEF6FF">🚚</div>
+                        <div class="stat-value" id="stat-carriers">—</div>
+                        <div class="stat-label">Total Carriers</div><span class="stat-change up">+3 this month</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#F0FFF4">🛣️</div>
+                        <div class="stat-value" id="stat-lanes">—</div>
+                        <div class="stat-label">Active Lanes</div><span class="stat-change up">Monitoring live</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#FFFBEB">💰</div>
+                        <div class="stat-value" id="stat-savings">—</div>
+                        <div class="stat-label">Cost Saved This Month</div><span class="stat-change up">↑ 18% vs last
+                            month</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#FFF0F0">📝</div>
+                        <div class="stat-value" id="stat-rfqs">—</div>
+                        <div class="stat-label">Pending RFQs</div><span class="stat-change"
+                            style="background:#EEF6FF;color:var(--accent)">AI ready</span>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Recent Procurement Activity</div>
+                                <div class="card-subtitle">Live updates from AI agent</div>
+                            </div>
+                            <a href="bid-scoring.html" class="btn btn-secondary btn-sm">View All →</a>
+                        </div>
+                        <div id="activity-feed" style="display:flex;flex-direction:column;gap:12px">
+                            <div style="text-align:center;padding:32px;color:var(--text-muted)">Loading activity...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carrier Health -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Carrier Health Overview</div>
+                                <div class="card-subtitle">Top 5 carriers by performance</div>
+                            </div>
+                            <a href="carrier-dna.html" class="btn btn-secondary btn-sm">All Carriers →</a>
+                        </div>
+                        <div id="carrier-health" style="display:flex;flex-direction:column;gap:12px">
+                            <div style="text-align:center;padding:32px;color:var(--text-muted)">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px">
+                    <!-- Monthly Savings Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Monthly Savings Trend</div>
+                                <div class="card-subtitle">Cost savings attributed to CarrierIQ (INR)</div>
+                            </div>
+                        </div>
+                        <canvas id="savings-chart" height="180"></canvas>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Quick Actions</div>
+                                <div class="card-subtitle">Common AI-powered tasks</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:12px">
+                            <a href="bid-scoring.html" class="btn btn-primary" style="justify-content:flex-start">📊
+                                Evaluate Carrier Bids</a>
+                            <a href="chat.html" class="btn btn-secondary" style="justify-content:flex-start">💬 Ask
+                                Procurement AI</a>
+                            <a href="rfq.html" class="btn btn-secondary" style="justify-content:flex-start">📝 Generate
+                                RFQ</a>
+                            <a href="risk.html" class="btn btn-secondary" style="justify-content:flex-start">🌡️ View
+                                Risk Heatmap</a>
+                            <a href="onboard.html" class="btn btn-secondary" style="justify-content:flex-start">🆕 Score
+                                New Carrier</a>
+                        </div>
+                        <!-- Alerts -->
+                        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+                            <div
+                                style="font-size:0.875rem;font-weight:600;color:var(--text-primary);margin-bottom:12px">
+                                ⚠️ Active Alerts</div>
+                            <div
+                                style="font-size:0.8125rem;padding:10px 14px;background:var(--danger-bg);border-radius:var(--radius-sm);color:var(--danger);margin-bottom:8px">
+                                🚨 DTDC: Overbilling risk on Chennai → Coimbatore
+                            </div>
+                            <div
+                                style="font-size:0.8125rem;padding:10px 14px;background:var(--warning-bg);border-radius:var(--radius-sm);color:var(--warning);margin-bottom:8px">
+                                ⚠️ Delhi → Kolkata: 25% above market rate
+                            </div>
+                            <div
+                                style="font-size:0.8125rem;padding:10px 14px;background:#FFF0F0;border-radius:var(--radius-sm);color:var(--danger)">
+                                📉 XpressBees: Predicted reliability drop in Nov
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('dashboard', 'Dashboard');
+
+        async function loadDashboard() {
+            try {
+                const stats = await api.getDashboardStats();
+
+                // Animate stats
+                animateCounter(document.getElementById('stat-carriers'), stats.total_carriers || 8);
+                animateCounter(document.getElementById('stat-lanes'), stats.active_lanes || 7);
+                document.getElementById('stat-savings').textContent = '₹' + ((stats.cost_saved_month || 84500) / 1000).toFixed(0) + 'K';
+                document.getElementById('stat-rfqs').textContent = stats.pending_rfqs || 3;
+
+                // Activity feed
+                const feed = document.getElementById('activity-feed');
+                const activities = stats.recent_activity || [];
+                if (activities.length > 0) {
+                    feed.innerHTML = activities.map(a => `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm)">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">
+            ${a.type === 'bid_evaluation' ? '📊' : a.type === 'rfq_generated' ? '📝' : '⚠️'}
+          </div>
+          <div>
+            <div style="font-size:0.875rem;font-weight:500;color:var(--text-primary)">${a.message}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">${a.time || 'recently'}</div>
+          </div>
+        </div>`).join('');
+                }
+
+                // Carrier health
+                const health = document.getElementById('carrier-health');
+                const carriers = stats.carrier_health || [];
+                if (carriers.length > 0) {
+                    health.innerHTML = carriers.map(c => `
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:700;color:var(--accent);flex-shrink:0">
+            ${c.name.charAt(0)}
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:0.875rem;font-weight:500">${c.name}</span>
+              <span class="badge badge-${c.status === 'healthy' ? 'success' : c.status === 'watch' ? 'warning' : 'danger'}">${c.status}</span>
+            </div>
+            ${scoreFill(c.score)}
+          </div>
+        </div>`).join('');
+                }
+
+                // Savings chart
+                renderSavingsChart();
+
+            } catch (e) {
+                toast('Could not load dashboard stats: ' + e.message, 'error');
+                renderSavingsChart(); // Show with mock data
+            }
+        }
+
+        function renderSavingsChart() {
+            const ctx = document.getElementById('savings-chart');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+                    datasets: [{
+                        label: 'Monthly Savings (₹)',
+                        data: [42000, 58000, 71000, 84500, 93000, 112000],
+                        backgroundColor: 'rgba(33, 118, 174, 0.15)',
+                        borderColor: '#2176AE',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => '₹' + ctx.parsed.y.toLocaleString('en-IN')
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K', font: { size: 11 } }
+                        },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>

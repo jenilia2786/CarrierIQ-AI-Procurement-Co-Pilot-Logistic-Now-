@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Green Freight Tracking (ESG) — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div class="card" style="margin-bottom:24px;border-top:4px solid #0DB57F;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">🌱 Scope 3 Carbon Emissions (Logistics)</div>
+                            <div class="card-subtitle">AI-driven predictive green supply chain modeling and tracking for ESG compliance.</div>
+                        </div>
+                        <button class="btn btn-primary" style="background:#0DB57F;border-color:#0DB57F">📥 Export ESG Report</button>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px">
+                    <div class="card" style="text-align:center">
+                        <div style="font-size:0.875rem;color:var(--text-secondary);font-weight:600">Total Emissions (YTD)</div>
+                        <div style="font-size:2.5rem;font-weight:800;color:var(--text-primary);margin:12px 0;">412 <span style="font-size:1rem">tCO2e</span></div>
+                        <span class="badge badge-success">-12.4% vs Last Year</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title" style="margin-bottom:16px">Emissions by Carrier</div>
+                        <canvas id="carrier-co2" height="150"></canvas>
+                    </div>
+                    <div class="card">
+                        <div class="card-title" style="margin-bottom:16px">Cost vs Carbon Efficiency</div>
+                        <canvas id="cost-co2" height="150"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Green Routing Optimizer</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                        <div>
+                            <table class="data-table">
+                                <thead><tr><th>Route</th><th>Current Method</th><th>Alternative Suggestion</th><th>Carbon Saved</th></tr></thead>
+                                <tbody>
+                                    <tr><td><strong>Mumbai → Delhi</strong></td><td>Diesel Truck 32ft</td><td>Rail Multi-modal</td><td style="color:#0DB57F;font-weight:700">-64% CO2</td></tr>
+                                    <tr><td><strong>Pune → BLR</strong></td><td>FTL (Underutilized)</td><td>AI Consolidated LTL</td><td style="color:#0DB57F;font-weight:700">-28% CO2</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="background:#F0FFF8;padding:24px;border-radius:var(--radius-lg);border:1px solid #C4F1E1">
+                            <h4 style="color:#0DB57F;margin-bottom:12px">AI Recommendation: Mode Shift</h4>
+                            <p style="font-size:0.875rem;line-height:1.6;color:var(--text-secondary)">
+                                By shifting 30% of your current Mumbai → Delhi volume from Road (Diesel) to Rail (Multi-modal) using CONCOR logistics, CarrierIQ predicts a <strong>64% drop in Scope 3 emissions</strong> on that lane, while increasing average transit time by only 0.8 days.
+                            </p>
+                            <button class="btn btn-primary" style="margin-top:16px;background:#0DB57F;border-color:#0DB57F">Run Multi-Modal RFP</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('green', 'Green Freight Tracking (ESG)');
+        
+        // Render dummy charts to make it look active
+        setTimeout(() => {
+            new Chart(document.getElementById('carrier-co2'), {
+                type: 'doughnut',
+                data: { labels: ['BlueDart', 'Delhivery', 'Rivigo'], datasets: [{ data: [40, 35, 25], backgroundColor: ['#0DB57F', '#2176AE', '#F59E0B'] }] },
+                options: { plugins: { legend: { position: 'right' } } }
+            });
+            new Chart(document.getElementById('cost-co2'), {
+                type: 'scatter',
+                data: { datasets: [{ label: 'Lanes', data: [{x: 45, y: 120}, {x: 80, y: 150}, {x: 30, y: 80}], backgroundColor: '#2176AE' }] },
+                options: { scales: { x: { title: { display: true, text: 'Cost (₹k)' }}, y: { title: { display: true, text: 'CO2 (kg)' }} }, plugins: { legend: { display: false } } }
+            });
+        }, 300);
+    </script>
+</body>
+</html>

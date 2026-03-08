@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Market Benchmark — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <!-- Summary Cards -->
+                <div class="stats-grid" style="margin-bottom:24px">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--danger-bg)">🚨</div>
+                        <div class="stat-value" id="critical-count">—</div>
+                        <div class="stat-label">Lanes Critically Overpaying</div><span
+                            class="stat-change down">Immediate action needed</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--warning-bg)">⚠️</div>
+                        <div class="stat-value" id="warning-count">—</div>
+                        <div class="stat-label">Lanes Slightly Above Market</div><span class="stat-change"
+                            style="background:var(--warning-bg);color:var(--warning)">Review at renewal</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--success-bg)">✅</div>
+                        <div class="stat-value" id="good-count">—</div>
+                        <div class="stat-label">Lanes at Market Rate</div><span class="stat-change up">No action
+                            needed</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#EEF6FF">💰</div>
+                        <div class="stat-value" id="potential-savings">—</div>
+                        <div class="stat-label">Potential Annual Savings</div><span class="stat-change up">If
+                            renegotiated</span>
+                    </div>
+                </div>
+
+                <!-- Benchmark Chart -->
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">💰 Your Rate vs Market Benchmark (per lane)</div>
+                        </div>
+                    </div>
+                    <canvas id="benchmark-chart" height="120"></canvas>
+                </div>
+
+                <!-- Benchmark Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Lane-by-Lane Rate Analysis</div>
+                            <div class="card-subtitle">Color coded: Green = at market | Orange = 10% above | Red = 20%+
+                                above</div>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="data-table" id="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Lane</th>
+                                    <th>Your Rate</th>
+                                    <th>Market Rate</th>
+                                    <th>Difference</th>
+                                    <th>Status</th>
+                                    <th>AI Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="benchmark-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('benchmark', 'Market Benchmark');
+
+        async function loadBenchmarks() {
+            try {
+                const data = await api.getBenchmarks();
+                const benchmarks = data.benchmarks || [];
+                renderSummary(benchmarks);
+                renderChart(benchmarks);
+                renderTable(benchmarks);
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderSummary(benchmarks) {
+            const critical = benchmarks.filter(b => b.overpay_pct >= 20).length;
+            const warning = benchmarks.filter(b => b.overpay_pct > 5 && b.overpay_pct < 20).length;
+            const good = benchmarks.filter(b => b.overpay_pct <= 5).length;
+            const potentialSavings = benchmarks.reduce((sum, b) => {
+                if (b.overpay_pct > 0) return sum + (b.your_rate - b.market_rate) * 12 * 8; // 8 shipments/mo
+                return sum;
+            }, 0);
+
+            document.getElementById('critical-count').textContent = critical;
+            document.getElementById('warning-count').textContent = warning;
+            document.getElementById('good-count').textContent = good;
+            document.getElementById('potential-savings').textContent = '₹' + (potentialSavings / 100000).toFixed(1) + 'L';
+        }
+
+        function renderChart(benchmarks) {
+            const ctx = document.getElementById('benchmark-chart');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: benchmarks.map(b => b.lane.length > 15 ? b.lane.substring(0, 15) + '...' : b.lane),
+                    datasets: [
+                        { label: 'Your Rate (₹)', data: benchmarks.map(b => b.your_rate), backgroundColor: 'rgba(33,118,174,0.7)', borderRadius: 4 },
+                        { label: 'Market Rate (₹)', data: benchmarks.map(b => b.market_rate), backgroundColor: 'rgba(13,181,127,0.7)', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+                    scales: {
+                        y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderTable(benchmarks) {
+            const tbody = document.getElementById('benchmark-table-body');
+            tbody.innerHTML = benchmarks.map(b => {
+                const diff = b.overpay_pct;
+                let statusBadge, rowStyle;
+                if (diff >= 20) {
+                    statusBadge = `<span class="risk-badge-high">🚨 Critical Overpay (${diff}%)</span>`;
+                    rowStyle = 'background:rgba(239,68,68,0.03)';
+                } else if (diff > 5) {
+                    statusBadge = `<span class="risk-badge-medium">⚠️ Above Market (${diff}%)</span>`;
+                    rowStyle = 'background:rgba(245,158,11,0.03)';
+                } else {
+                    statusBadge = `<span class="risk-badge-low">✅ At Market (${diff}%)</span>`;
+                    rowStyle = '';
+                }
+                const diffStr = diff >= 0 ? `+${formatINR(b.your_rate - b.market_rate)} (+${diff}%)` : `${formatINR(b.your_rate - b.market_rate)} (${diff}%)`;
+                return `<tr style="${rowStyle}">
+      <td><strong>${b.lane}</strong></td>
+      <td><strong>${formatINR(b.your_rate)}</strong></td>
+      <td>${formatINR(b.market_rate)}</td>
+      <td style="color:${diff > 0 ? 'var(--danger)' : 'var(--success)'};font-weight:600">${diffStr}</td>
+      <td>${statusBadge}</td>
+      <td style="font-size:0.8125rem;color:var(--text-secondary);max-width:280px">${b.recommendation}</td>
+    </tr>`;
+            }).join('');
+        }
+
+        loadBenchmarks();
+    </script>
+</body>
+
+</html>

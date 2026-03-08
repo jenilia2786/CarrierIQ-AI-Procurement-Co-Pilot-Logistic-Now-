@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bid Upload & Scoring — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <!-- Upload Section -->
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">📊 Carrier Bid Upload & AI Scoring</div>
+                            <div class="card-subtitle">Upload CSV/JSON or paste bids below. AI normalizes and scores
+                                instantly.</div>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+                        <!-- Upload area -->
+                        <div>
+                            <div id="drop-zone"
+                                style="border:2px dashed var(--border-strong);border-radius:var(--radius-lg);padding:40px;text-align:center;cursor:pointer;transition:var(--transition);background:var(--bg)"
+                                ondrop="handleDrop(event)"
+                                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                                ondragleave="this.style.borderColor=''"
+                                onclick="document.getElementById('file-input').click()">
+                                <div style="font-size:2.5rem;margin-bottom:12px">📁</div>
+                                <div style="font-weight:600;color:var(--text-primary);margin-bottom:6px">Drop CSV or
+                                    JSON here</div>
+                                <div style="font-size:0.8125rem;color:var(--text-muted)">or click to browse</div>
+                                <input type="file" id="file-input" accept=".csv,.json" style="display:none"
+                                    onchange="handleFile(this.files[0])">
+                            </div>
+                            <div style="margin-top:12px;text-align:center;color:var(--text-muted);font-size:0.8125rem">—
+                                or —</div>
+                        </div>
+                        <!-- Quick bid form -->
+                        <div>
+                            <div class="input-group" style="margin-bottom:12px">
+                                <label class="input-label">Quick Test — Paste JSON (array of bids)</label>
+                                <textarea id="json-input" class="input-field"
+                                    style="height:120px;resize:vertical;font-family:monospace;font-size:0.8125rem"
+                                    placeholder='[{"carrier_name":"BlueDart","lane":"Mumbai → Delhi","price":18500,"transit_days":2,"reliability_pct":96.5}]'></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="runSampleBids()"
+                                style="width:100%;justify-content:center;margin-bottom:8px">
+                                🧠 Run AI Bid Scoring →
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadSampleBids()"
+                                style="width:100%;justify-content:center">
+                                📋 Load Sample Indian Carrier Bids
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results (hidden initially) -->
+                <div id="results-section" style="display:none">
+
+                    <!-- Top Recommendation Banner -->
+                    <div id="top-rec-banner" class="card"
+                        style="margin-bottom:24px;border-left:4px solid var(--success);background:linear-gradient(135deg,rgba(13,181,127,0.04),white)">
+                        <div style="display:flex;align-items:flex-start;gap:20px">
+                            <div style="font-size:2.5rem">🏆</div>
+                            <div style="flex:1">
+                                <div style="font-size:0.875rem;font-weight:600;color:var(--success);margin-bottom:4px">
+                                    AI RECOMMENDATION</div>
+                                <div id="rec-title"
+                                    style="font-size:1.25rem;font-weight:800;color:var(--text-primary);margin-bottom:12px">
+                                    —</div>
+                                <div id="rec-reasoning"
+                                    style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7"></div>
+                            </div>
+                            <button id="gen-award-btn" class="btn btn-primary" onclick="goToAward()">Generate Award
+                                Letter →</button>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+                        <div class="card">
+                            <div class="card-title" style="margin-bottom:16px">Price Comparison (₹)</div>
+                            <canvas id="price-chart" height="200"></canvas>
+                        </div>
+                        <div class="card">
+                            <div class="card-title" style="margin-bottom:16px">Total Score Comparison</div>
+                            <canvas id="score-chart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Scored Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Ranked Carrier List</div>
+                                <div class="card-subtitle">AI-scored on Price, Reliability, Transit, Risk</div>
+                            </div>
+                            <div class="search-wrap">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="bid-search" class="input-field btn-sm"
+                                    placeholder="Search carriers..." oninput="filterTable()" style="width:220px">
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="data-table" id="bid-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th data-sort="name">Carrier</th>
+                                        <th data-sort="lane">Lane</th>
+                                        <th data-sort="price">Price</th>
+                                        <th data-sort="transit">Transit</th>
+                                        <th data-sort="reliability">Reliability</th>
+                                        <th>Price Score</th>
+                                        <th>Reliability Score</th>
+                                        <th>Total Score</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bid-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('bid-scoring', 'Carrier Bid Upload & Scoring');
+
+        let currentScored = [];
+        let topCarrier = null;
+
+        function loadSampleBids() {
+            const sample = [
+                { "carrier_name": "BlueDart Express", "lane": "Mumbai → Delhi", "price": 18500, "transit_days": 2, "reliability_pct": 96.5 },
+                { "carrier_name": "Delhivery", "lane": "Mumbai → Delhi", "price": 16800, "transit_days": 2, "reliability_pct": 95.4 },
+                { "carrier_name": "Rivigo Technologies", "lane": "Mumbai → Delhi", "price": 22000, "transit_days": 2, "reliability_pct": 98.1 },
+                { "carrier_name": "Gati-KWE", "lane": "Mumbai → Delhi", "price": 19500, "transit_days": 3, "reliability_pct": 92.3 },
+                { "carrier_name": "XpressBees", "lane": "Mumbai → Delhi", "price": 15500, "transit_days": 2, "reliability_pct": 94.1 },
+            ];
+            document.getElementById('json-input').value = JSON.stringify(sample, null, 2);
+            toast('Sample bids loaded. Click "Run AI Bid Scoring" →', 'info');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        }
+
+        async function handleFile(file) {
+            if (!file) return;
+            const text = await file.text();
+            if (file.name.endsWith('.json')) {
+                document.getElementById('json-input').value = text;
+            } else if (file.name.endsWith('.csv')) {
+                // Convert CSV to JSON preview
+                const lines = text.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const rows = lines.slice(1).filter(l => l.trim()).map(l => {
+                    const vals = l.split(',').map(v => v.trim().replace(/"/g, ''));
+                    const obj = {};
+                    headers.forEach((h, i) => obj[h] = vals[i] || '');
+                    return obj;
+                });
+                document.getElementById('json-input').value = JSON.stringify(rows, null, 2);
+                toast(`Parsed CSV: ${rows.length} bids ready to score`, 'success');
+            }
+        }
+
+        async function runSampleBids() {
+            const jsonStr = document.getElementById('json-input').value.trim();
+            let bids = null;
+
+            if (jsonStr) {
+                try { bids = JSON.parse(jsonStr); } catch (e) { toast('Invalid JSON format', 'error'); return; }
+            }
+
+            showSpinner('🧠 AI agent normalizing and scoring bids...');
+            try {
+                const result = bids
+                    ? await api.uploadBidsJSON(bids)
+                    : await api.uploadBidsJSON([]);
+                hideSpinner();
+                renderResults(result);
+                toast('✅ Bids scored by AI!', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderResults(result) {
+            const scored = result.scored_carriers || [];
+            currentScored = scored;
+            topCarrier = result.top_recommendation;
+
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+
+            // Top recommendation
+            if (topCarrier) {
+                document.getElementById('rec-title').textContent = `${topCarrier.carrier_name} — Score: ${topCarrier.total_score}/100`;
+                document.getElementById('rec-reasoning').innerHTML = renderMarkdown(result.reasoning || '');
+                localStorage.setItem('lastAwardCarrier', JSON.stringify(topCarrier));
+            }
+
+            renderTable(scored);
+            renderCharts(scored);
+            makeTableSortable('bid-table');
+        }
+
+        function renderTable(scored) {
+            const tbody = document.getElementById('bid-table-body');
+            tbody.innerHTML = scored.map((c, i) => `
+    <tr>
+      <td><strong style="color:${i === 0 ? 'var(--success)' : 'var(--text-secondary)'}">#${i + 1}</strong></td>
+      <td>
+        <div style="font-weight:600;color:var(--text-primary)">${c.carrier_name}</div>
+      </td>
+      <td style="color:var(--text-secondary)">${c.lane || '—'}</td>
+      <td><strong>${formatINR(c.price)}</strong></td>
+      <td>${c.transit_days} day${c.transit_days > 1 ? 's' : ''}</td>
+      <td>${formatPct(c.reliability_pct)}</td>
+      <td>${scoreFill(c.price_score)}</td>
+      <td>${scoreFill(c.reliability_score)}</td>
+      <td>${scoreFill(c.total_score)}</td>
+      <td><span class="badge badge-${c.recommendation === 'Recommended' ? 'success' : c.recommendation === 'Consider' ? 'warning' : 'danger'}">${c.recommendation}</span></td>
+    </tr>`).join('');
+        }
+
+        function filterTable() {
+            const q = document.getElementById('bid-search').value.toLowerCase();
+            document.querySelectorAll('#bid-table-body tr').forEach(r => {
+                r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        let priceChart, scoreChart;
+        function renderCharts(scored) {
+            const labels = scored.map(s => s.carrier_name.split(' ')[0]);
+            const colors = ['#2176AE', '#0DB57F', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+            if (priceChart) priceChart.destroy();
+            priceChart = new Chart(document.getElementById('price-chart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: scored.map(s => s.price), backgroundColor: colors, borderRadius: 6 }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' } }, x: { grid: { display: false } } } }
+            });
+
+            if (scoreChart) scoreChart.destroy();
+            scoreChart = new Chart(document.getElementById('score-chart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: scored.map(s => s.total_score), backgroundColor: scored.map(s => s.total_score >= 75 ? 'rgba(13,181,127,0.8)' : s.total_score >= 60 ? 'rgba(245,158,11,0.8)' : 'rgba(239,68,68,0.8)'), borderRadius: 6 }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { max: 100, ticks: { callback: v => v } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function goToAward() {
+            window.location.href = 'award.html';
+        }
+    </script>
+</body>
+
+</html>

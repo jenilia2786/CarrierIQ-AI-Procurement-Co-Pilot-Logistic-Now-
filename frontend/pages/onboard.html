@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrier Onboarding Scorer — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">🆕 New Carrier Onboarding Scorer</div>
+                                <div class="card-subtitle">AI scores new carriers for trust and contract readiness</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:16px">
+                            <div class="input-group">
+                                <label class="input-label">Carrier / Company Name</label>
+                                <input type="text" id="ob-name" class="input-field"
+                                    placeholder="Swift Cargo India Pvt Ltd" />
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">GSTIN Number</label>
+                                <input type="text" id="ob-gst" class="input-field" placeholder="27AABCS1429B1Z5"
+                                    maxlength="15" />
+                                <small style="color:var(--text-muted);font-size:0.75rem">15-digit GST identification
+                                    number</small>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                <div class="input-group">
+                                    <label class="input-label">Vehicle Count</label>
+                                    <input type="number" id="ob-vehicles" class="input-field" placeholder="50"
+                                        min="1" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Years in Operation</label>
+                                    <input type="number" id="ob-years" class="input-field" placeholder="8" min="0" />
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Coverage Cities (comma-separated)</label>
+                                <textarea id="ob-cities" class="input-field" style="height:80px;resize:vertical"
+                                    placeholder="Mumbai, Delhi, Bangalore, Chennai, Hyderabad, Pune, Ahmedabad, Kolkata"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Certifications (comma-separated, optional)</label>
+                                <input type="text" id="ob-certs" class="input-field"
+                                    placeholder="ISO 9001, GDP, DGMS, FSSAI" />
+                            </div>
+                            <button class="btn btn-primary" onclick="scoreCarrier()"
+                                style="width:100%;justify-content:center">
+                                🤖 Score This Carrier →
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadSampleCarrier()"
+                                style="width:100%;justify-content:center">
+                                📋 Load Sample New Carrier Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Trust Score Result</div>
+                                <div class="card-subtitle">AI-generated trust assessment</div>
+                            </div>
+                        </div>
+                        <div id="onboard-result">
+                            <div style="padding:48px;text-align:center;color:var(--text-muted)">
+                                <div style="font-size:3rem;margin-bottom:16px">🆕</div>
+                                <div style="font-weight:600;margin-bottom:8px">Trust score appears here</div>
+                                <div style="font-size:0.875rem">Fill in carrier details and click Score</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('onboard', 'Carrier Onboarding Scorer');
+
+        function loadSampleCarrier() {
+            document.getElementById('ob-name').value = 'NovaTrans Logistics India Pvt Ltd';
+            document.getElementById('ob-gst').value = '27AABCS1429B1Z5';
+            document.getElementById('ob-vehicles').value = '45';
+            document.getElementById('ob-years').value = '7';
+            document.getElementById('ob-cities').value = 'Mumbai, Pune, Nashik, Aurangabad, Nagpur, Surat, Ahmedabad, Vadodara, Rajkot, Jaipur, Delhi';
+            document.getElementById('ob-certs').value = 'ISO 9001:2015, FSSAI';
+            toast('Sample carrier data loaded!', 'info');
+        }
+
+        async function scoreCarrier() {
+            const name = document.getElementById('ob-name').value.trim();
+            const gst_number = document.getElementById('ob-gst').value.trim();
+            const vehicle_count = parseInt(document.getElementById('ob-vehicles').value) || 0;
+            const years_in_operation = parseInt(document.getElementById('ob-years').value) || 0;
+            const citiesStr = document.getElementById('ob-cities').value;
+            const certsStr = document.getElementById('ob-certs').value;
+
+            if (!name) { toast('Please enter carrier name', 'warning'); return; }
+
+            const coverage_cities = citiesStr.split(',').map(c => c.trim()).filter(Boolean);
+            const certifications = certsStr.split(',').map(c => c.trim()).filter(Boolean);
+
+            showSpinner('🤖 AI scoring new carrier...');
+            try {
+                const result = await api.scoreNewCarrier({ name, gst_number, vehicle_count, years_in_operation, coverage_cities, certifications });
+                hideSpinner();
+                renderResult(result);
+                toast('✅ Carrier scored!', 'success');
+            } catch (e) {
+                hideSpinner();
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function renderResult(r) {
+            const scoreColor = r.trust_level === 'HIGH' ? 'var(--success)' : r.trust_level === 'MEDIUM' ? 'var(--warning)' : 'var(--danger)';
+            const scoreBg = r.trust_level === 'HIGH' ? 'var(--success-bg)' : r.trust_level === 'MEDIUM' ? 'var(--warning-bg)' : 'var(--danger-bg)';
+            const scoreIcon = r.trust_level === 'HIGH' ? '✅' : r.trust_level === 'MEDIUM' ? '⚠️' : '❌';
+
+            document.getElementById('onboard-result').innerHTML = `
+    <!-- Score Display -->
+    <div style="text-align:center;padding:32px;background:${scoreBg};border-radius:var(--radius-lg);margin-bottom:20px">
+      <div style="font-size:3rem;margin-bottom:8px">${scoreIcon}</div>
+      <div style="font-size:3.5rem;font-weight:900;color:${scoreColor};line-height:1">${r.trust_score}</div>
+      <div style="font-size:0.875rem;font-weight:600;color:${scoreColor};margin-top:4px">/ 100 TRUST SCORE</div>
+      <div style="font-size:1.25rem;font-weight:800;color:${scoreColor};margin-top:12px">${r.trust_level} TRUST</div>
+    </div>
+
+    <!-- Score Breakdown -->
+    <div style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:0.875rem;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">Score Breakdown</div>
+      ${Object.entries(r.breakdown || {}).map(([k, v]) => {
+                const label = k.replace(/_score/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:0.875rem;font-weight:500;color:var(--text-primary)">${label}</span>
+          ${scoreFill(v)}
+        </div>`;
+            }).join('')}
+    </div>
+
+    <!-- Flags -->
+    ${r.flags?.length ? `<div style="margin-bottom:16px">
+      <div style="font-weight:700;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase">Risk Flags</div>
+      ${r.flags.map(f => `<div style="padding:10px 14px;background:var(--warning-bg);border-radius:var(--radius-sm);font-size:0.8125rem;color:var(--text-primary);margin-bottom:6px">${f}</div>`).join('')}
+    </div>` : ''}
+
+    <!-- Recommendations -->
+    <div>
+      <div style="font-weight:700;font-size:0.875rem;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase">Recommendations</div>
+      ${r.recommendations.map(rec => `<div style="padding:12px 16px;background:${r.trust_level === 'HIGH' ? 'var(--success-bg)' : r.trust_level === 'MEDIUM' ? 'var(--warning-bg)' : 'var(--danger-bg)'};border-radius:var(--radius-sm);font-size:0.875rem;margin-bottom:8px;color:var(--text-primary)">${rec}</div>`).join('')}
+    </div>`;
+        }
+    </script>
+</body>
+
+</html>

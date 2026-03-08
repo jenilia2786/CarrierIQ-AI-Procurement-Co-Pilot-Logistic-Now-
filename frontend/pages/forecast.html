@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predictive Rate Forecasting — CarrierIQ</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="app-layout" class="app-layout">
+        <div class="main-content">
+            <div class="page-content" id="page-content">
+
+                <div class="card" style="margin-bottom:24px;border-top:4px solid var(--accent);">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">🔮 Predictive Rate Forecasting</div>
+                            <div class="card-subtitle">AI time-series modeling of Indian freight rates over the next 6 months to optimize your procurement timing.</div>
+                        </div>
+                        <div>
+                            <select class="input-field" style="width:200px">
+                                <option>Route: Mumbai → Delhi</option>
+                                <option>Route: Pune → Bangalore</option>
+                                <option>Route: Chennai → Kolkata</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title" style="margin-bottom:16px">6-Month Spot vs Contract Rate Forecast (₹/Ton)</div>
+                    <canvas id="forecast-chart" height="90"></canvas>
+                </div>
+
+                <div style="margin-top:24px;background:#EAF4FF;padding:24px;border-radius:var(--radius-lg);border:1px solid #BFE0FF;">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div style="font-size:2rem">💡</div>
+                        <div>
+                            <div style="font-weight:700;color:var(--navy);font-size:1.1rem;margin-bottom:4px">Procurement Action Item</div>
+                            <div style="color:var(--text-secondary);line-height:1.5">
+                                AI predicts a <strong>12% surge in spot rates</strong> starting in October due to fuel indices and incoming Diwali festive demand. <br>
+                                <strong>Recommendation:</strong> Lock in 6-month fixed contracts with Delhivery or BlueDart immediately at the current ₹17,500 rate before September ends to avoid market exposure.
+                            </div>
+                        </div>
+                        <div style="margin-left:auto;display:flex;align-items:center">
+                            <button class="btn btn-primary" onclick="window.location.href='rfq.html'">Generate RFQ Now</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+        injectLayout('forecast', 'Predictive Rate Forecasting');
+        
+        // Render forecast chart
+        setTimeout(() => {
+            new Chart(document.getElementById('forecast-chart'), {
+                type: 'line',
+                data: { 
+                    labels: ['July', 'August', 'September', 'October (Forecast)', 'November (Forecast)', 'December (Forecast)'],
+                    datasets: [
+                        { label: 'Spot Market Rates', data: [16800, 17200, 17500, 18900, 19600, 19000], borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 },
+                        { label: 'CarrierIQ Recommendation (Contract)', data: [17000, 17000, 17500, 17500, 17500, 17500], borderColor: '#0DB57F', borderDash: [5, 5], tension: 0.1 }
+                    ]
+                },
+                options: {
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: false, min: 15000 } }
+                }
+            });
+        }, 300);
+    </script>
+</body>
+</html>
