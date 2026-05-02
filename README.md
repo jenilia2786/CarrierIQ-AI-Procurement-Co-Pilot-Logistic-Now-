@@ -15,10 +15,20 @@ CarrierIQ is an intelligent, AI-driven platform designed to revolutionize the lo
 *   **🌱 Green Freight Tracking:** Estimates and tracks Scope 3 CO2 emissions, allowing teams to optimize supply chain sustainability.
 *   **🧾 Invoice Reconciliation:** AI performs automated 3-way matching of invoices, intelligently spotting overbilling and hidden accessorials against contracted rates.
 
-## 🛠️ Tech Stack Used
-*   **Backend:** Python 3.11, FastAPI, Uvicorn, LangChain
-*   **Frontend:** HTML5, Vanilla JavaScript, Vanilla CSS (Custom Design System)
-*   **Architecture:** Separation of backend and frontend APIs with seamless CORS support
+## 🛠️ Technologies, Frameworks, and Algorithms Used
+
+### Core Technologies & Frameworks
+*   **Python 3.11 (Backend Language):** Chosen for its robust ecosystem in data processing and AI, natively supporting modern asynchronous capabilities needed for high-speed API responses.
+*   **FastAPI & Uvicorn (Backend Framework):** Selected for its extreme performance and built-in asynchronous support. FastAPI auto-generates Swagger API documentation which is invaluable for rapid development and testing, while Uvicorn acts as a lightning-fast ASGI server.
+*   **HTML5, Vanilla JavaScript, Vanilla CSS (Frontend):** Used to keep the application lightweight, blazing fast, and free from external dependency bloat. A custom design system was created to ensure maximum flexibility and complete control over the UI/UX.
+*   **MongoDB (Database):** A NoSQL document-based database ideal for storing highly variable and semi-structured data like carrier profiles, RFQs, and performance scorecards without being restricted by rigid SQL schemas.
+
+### AI Frameworks & Algorithms
+*   **LangChain (AI/LLM Framework):** Utilized to orchestrate the AI Agent. LangChain significantly simplifies the creation of our conversational agent, RAG pipelines, and the complex prompt chaining required to analyze, evaluate, and score carriers intelligently.
+*   **Retrieval-Augmented Generation (RAG):** Implemented to ground the AI's responses in historical carrier data and factual documents, ensuring the natural language chat provides accurate, context-aware answers rather than hallucinated responses.
+*   **Multi-Criteria Decision Analysis (MCDA) / Heuristic Scoring:** Used as the mathematical foundation alongside the AI to objectively evaluate and rank carriers across multiple weighted dimensions (Price, Reliability, Transit Time, Risk).
+*   **Natural Language Processing (NLP):** Leveraged for parsing unstructured user chat queries (e.g., "Best carrier to Mumbai under ₹20k") and intelligently generating structured legal and business documents (Award Letters, RFQs).
+*   **Decoupled API Architecture:** Separation of backend and frontend APIs with seamless CORS support, ensuring modularity, scalability, and ease of deployment.
 
 ## 📋 Prerequisites
 *   **Python:** Version 3.11 or higher
